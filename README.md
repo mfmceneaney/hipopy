@@ -1,4 +1,4 @@
-# HIPPy: an UpROOT-like I/O Interface for CLAS12 HIPO Files
+# HIPOPy: UpROOT-like I/O Interface for CLAS12 HIPO Files
 
 ## Installation
 
@@ -12,7 +12,7 @@ export PYTHONPATH=$PYTHONPATH:$PWD
 
 To install with pip:
 ```bash
-pip install hippy
+pip install hipopy
 ```
 
 ## Getting Started
