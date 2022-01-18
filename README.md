@@ -7,7 +7,10 @@ To install from source:
 git --recurse-submodules clone https://github.com/mfmceneaney/hippy.git
 cd hippy
 cd hipo; cd lz4; make CFLAGS=-fPIC; cd ..; cmake .; make; cd ..
-export PYTHONPATH=$PYTHONPATH:$PWD
+```
+Then add to following to your startup script:
+```bash
+export PYTHONPATH=$PYTHONPATH:/path/to/hipopy
 ```
 
 To install with pip:
