@@ -13,7 +13,7 @@ if __name__=="__main__":
 
     # Writing to a new file #NOTE: Appending to files coming soon.
     print("#----------------------------------------------------------------------#")
-    filename = "out.hipo"
+    filename = "out.hipo" # Creates this in your $PWD
     bank     = "NEW::bank"
     dtype    = "D" #NOTE: For now all the bank entries have to have the same type.
     names    = ["px","py","pz"]

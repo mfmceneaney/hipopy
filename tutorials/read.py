@@ -6,7 +6,7 @@
 import numpy as np
 import numpy.ma as ma
 import awkward as ak
-import hippy.hippy as hippy
+import hippy
 
 # TODO: Relocate this to some other functions for iterating input files like uproot
 if __name__=="__main__":
@@ -16,7 +16,7 @@ if __name__=="__main__":
     bankName = "NEW::bank"
     item = "px"
     maxEvents = 3
-    filename = '../misc/test.hipo'
+    filename = 'misc/test.hipo'
     counter = 0
 
     file = hippy.open(filename,mode="r")
@@ -26,15 +26,15 @@ if __name__=="__main__":
     
     # Loop through events in file
     for event in file:
-        data = file.getDoubles(bank,item)
+        data = file.getDoubles(bankName,item)
         print("counter = ",counter)
-        print("data = ",data)
+        print("data = ",np.array(data))
         counter += 1
         if counter == maxEvents: break
 
     # Reading a chain of files
     print("#----------------------------------------------------------------------#")
-    filenames = ['../misc/test.hipo','../misc/out.hipo']
+    filenames = ['misc/test.hipo','misc/out.hipo']
     banks = ["NEW::bank"]
     counter = 0
     step = 100
@@ -46,27 +46,3 @@ if __name__=="__main__":
         if counter == 0: print(ak.Array(batch["NEW::bank_px"]))
         counter += 1
         if counter % step == 0: print("counter = ",counter)
-
-    # Writing to a new file
-    print("#----------------------------------------------------------------------#")
-    filename = "out.hipo"
-    bank     = "NEW::bank"
-    dtype    = "D" #NOTE: For now all the bank entries have to have the same type.
-    names    = ["px","py","pz"]
-    namesAndTypes = {e:dtype for e in names}
-    rows = 7 # Chooose a #
-    nEvents = 10 # Choose a #
-    step = 5 # Choose a #
-
-    file = hippy.create(filename)
-    file.newTree(bank,namesAndTypes)
-    file.open(mode="w") # IMPORTANT!  Open AFTER calling newTree, otherwise the banks will not be written!
-
-    # Write events to file
-    for _ in range(nEvents):
-        data = np.random.random(size=(step,len(names),rows))
-        file.extend({
-            bank : data
-        })
-
-    file.close() #IMPORTANT! ( Can also use file.write() )
