@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "hippy"
+name = "hipopy"
 version = "0.1.0"
 description = ""
 authors = ["Matthew McEneaney <matthew.mceneaney@duke.edu>"]
