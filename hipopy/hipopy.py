@@ -562,9 +562,9 @@ class hipochain:
             newnames = []
             for i in range(len(self.names)):
                 files = glob.glob(self.names[i])
-                if len(files>0):
+                if len(files)>0:
                     for file in files:
-                        self.newnames.append(file)
+                        newnames.append(file)
             self.names = newnames
 
         self.banks   = banks if banks != "" else self.getBanks()
