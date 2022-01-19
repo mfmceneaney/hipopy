@@ -83,8 +83,7 @@ class hipofile:
         self.item     = 1
         self.dtypes   = {}
         self.buffext  = "~"
-        self.buffname = self.filename + self.buffext
-        self.buffer   = None
+        self.buffname = None
         
     def open(self):
         """
@@ -94,12 +93,13 @@ class hipofile:
         """
         if self.mode=="r": self.lib.hipo_file_open(self.filename.encode('ascii'))
         if self.mode=="w": self.lib.hipo_write_open_(self.filename.encode('ascii'))
-        if self.mode=="a" and self.buffer is None:
+        if self.mode=="a" and self.buffname is None:
             self.lib.hipo_file_open(self.filename.encode('ascii'))
             self.lib.hipo_read_all_banks_()
-            self.group = self.lib.hipo_get_group_() #TODO: Write this method
-            #NOTE: Separate code here so that you can call addSchema()
-        elif self.mode=="a" self.buffer is not None: self.lib.hipo_write_open_(self.buffname.encode('ascii'))
+            self.group = self.lib.hipo_get_group_()
+            self.buffname = self.filename + self.buffext #NOTE: Separate code here so that you can call addSchema()
+        elif self.mode=="a" and self.buffname is not None:
+            self.lib.hipo_write_open_(self.buffname.encode('ascii'))
             
     def flush(self):
         """
@@ -116,7 +116,8 @@ class hipofile:
             Close osstream for an open file.
         """
         if mode=="r": pass #NOTE: Nothing to do here.
-        if mode=="w": self.lib.hipo_write_close_()
+        if mode=="w":
+            self.lib.hipo_write_close_()
         if mode=="a":
             self.lib.hipo_write_close_()
             #TODO: cp buffer file into intended file
@@ -130,7 +131,7 @@ class hipofile:
         Description:
             Move to requested HIPO event in a file in read mode.
         """
-        self.status = ctypes.c_int(self.lib.hipo_go_to_event_(ctypes.byref(self.status),ctypes.byref(event)))
+        self.status = ctypes.c_int(self.lib.hipo_go_to_event_(ctypes.byref(self.status),ctypes.byref(ctypes.c_int(event))))
         if self.status.value==0: return True
         return False
 
@@ -161,7 +162,7 @@ class hipofile:
         names = namesAndTypes.keys()
         types = namesAndTypes.values()
         schemaString = ",".join( ["/".join( [key,namesAndTypes[key]] ) for key in namesAndTypes] )
-        if group < 0 :
+        if group <= self.group or group < 0:
             self.group += 1
             group = self.group
 
@@ -186,12 +187,12 @@ class hipofile:
         """
         self.lib.hipo_write_flush_()
 
-    def writeAllBank(self):
+    def writeAllBanks(self):
         """
         Description:
             Write all existing banks to event for appending to file.
         """
-        self.dataReader.hipo_write_all_banks_()
+        self.lib.hipo_write_all_banks_()
 
     def writeBank(self, name, names, data, dtype="D"):
 
@@ -322,7 +323,7 @@ class hipofile:
         Description:
             Read all existing banks to event for appending to file.
         """
-        self.dataReader.hipo_read_all_banks_()
+        self.lib.hipo_read_all_banks_()
 
     def readBank(self,bankName,verbose=False):
         """
