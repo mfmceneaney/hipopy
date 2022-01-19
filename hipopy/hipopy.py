@@ -31,8 +31,8 @@ def open(filename,mode="r"):
     Description:
         Open a HIPO file to read.
     """
-    f = hipofile(filename,LIBFILENAME)
-    f.open(mode=mode)
+    f = hipofile(filename,LIBFILENAME,mode=mode)
+    f.open()
     return f
 
 def iterate(files,banks,step=100):
@@ -54,7 +54,18 @@ def create(filename):
     Description:
         Open a HIPO file to write (from scratch).
     """
-    f = hipofile(filename,LIBFILENAME)
+    f = hipofile(filename,LIBFILENAME,mode="w")
+    return f
+
+def recreate(filename):
+    """
+    Arguments:
+        filename - pretty obvious
+    Description:
+        Open a HIPO file to write (from scratch).
+    """
+    f = hipofile(filename,LIBFILENAME,mode="a")
+    f.open() #NOTE: This just opens the reader.  To open the writer, call f.open() again explicitly after adding schema you want to write.
     return f
 
 #----------------------------------------------------------------------#
@@ -62,28 +73,34 @@ def create(filename):
 
 class hipofile:
 
-    def __init__(self,filename,libfilename):
+    def __init__(self,filename,libpath,mode="r"):
         self.filename = filename
-        self.libPath  = libfilename
-        self.lib      = ctypes.CDLL(self.libPath)
+        self.libpath  = libpath
+        self.mode     = mode # "r" : read, "w" : write, "a" : append
+        self.lib      = ctypes.CDLL(self.libpath)
         self.status   = ctypes.c_int(0)
         self.group    = 0
         self.item     = 1
         self.dtypes   = {}
+        self.buffext  = "~"
+        self.buffname = self.filename + self.buffext
+        self.buffer   = None
         
-    def open(self,mode="r"):
+    def open(self):
         """
-        Arguments:
-            filename - pretty obvious
-            mode     - "r" : read, "w" : write, "a" : append
         Description:
             Open a HIPO file to read, write (from scratch), or append data.
             IMPORTANT:  Make sure you add schema before opening a file to write!
         """
-        if mode=="r": self.lib.hipo_file_open(self.filename.encode('ascii'))
-        if mode=="w": self.lib.hipo_write_open_(self.filename.encode('ascii'))
-        if mode=="a": pass #TODO
-
+        if self.mode=="r": self.lib.hipo_file_open(self.filename.encode('ascii'))
+        if self.mode=="w": self.lib.hipo_write_open_(self.filename.encode('ascii'))
+        if self.mode=="a" and self.buffer is None:
+            self.lib.hipo_file_open(self.filename.encode('ascii'))
+            self.lib.hipo_read_all_banks_()
+            self.group = self.lib.hipo_get_group_() #TODO: Write this method
+            #NOTE: Separate code here so that you can call addSchema()
+        elif self.mode=="a" self.buffer is not None: self.lib.hipo_write_open_(self.buffname.encode('ascii'))
+            
     def flush(self):
         """
         Description:
@@ -98,9 +115,24 @@ class hipofile:
         Description:
             Close osstream for an open file.
         """
-        if mode=="r": pass #TODO
+        if mode=="r": pass #NOTE: Nothing to do here.
         if mode=="w": self.lib.hipo_write_close_()
-        if mode=="a": pass #TODO
+        if mode=="a":
+            self.lib.hipo_write_close_()
+            #TODO: cp buffer file into intended file
+
+    def goToEvent(self,event):
+        """
+        Arguments:
+            event - integer # indicating event # in file (starts at 0)
+        Returns:
+            boolean - True if requested event exists, otherwise False
+        Description:
+            Move to requested HIPO event in a file in read mode.
+        """
+        self.status = ctypes.c_int(self.lib.hipo_go_to_event_(ctypes.byref(self.status),ctypes.byref(event)))
+        if self.status.value==0: return True
+        return False
 
     def nextEvent(self):
         """
@@ -113,7 +145,7 @@ class hipofile:
         if self.status.value==0: return True
         return False
 
-    def addSchema(self, name, namesAndTypes, group=341, item=1):
+    def addSchema(self, name, namesAndTypes, group=-1, item=1):
         """
         Arguments:
             name          - bank name
@@ -129,6 +161,9 @@ class hipofile:
         names = namesAndTypes.keys()
         types = namesAndTypes.values()
         schemaString = ",".join( ["/".join( [key,namesAndTypes[key]] ) for key in namesAndTypes] )
+        if group < 0 :
+            self.group += 1
+            group = self.group
 
         self.lib.hipo_add_schema_(
             schemaString.encode("ascii"),
@@ -150,6 +185,13 @@ class hipofile:
             Writes current hipo event buffer to file.
         """
         self.lib.hipo_write_flush_()
+
+    def writeAllBank(self):
+        """
+        Description:
+            Write all existing banks to event for appending to file.
+        """
+        self.dataReader.hipo_write_all_banks_()
 
     def writeBank(self, name, names, data, dtype="D"):
 
@@ -188,16 +230,19 @@ class hipofile:
             dtype.encode("ascii")
         )
 
-    def newTree(self,bank,bankdict):
+    def newTree(self,bank,bankdict,group=None,item=None):
         """
         Arguments:
             bank     - bank name
             bankdict - dictionary of bank entry names to data types ("D", "F", "I")
+            group    - group identifier for bank (must be unique)
+            item     - item identifier for bank (does not have to be unique)
         Description:
             Mimics uproot newTree function.
         """
-        self.group += 1
-        self.addSchema(bank,bankdict,self.group,self.item)
+        group = self.group if group is None else group
+        item  = self.item if item is None else item
+        self.addSchema(bank,bankdict,group,item)
         self.dtypes[bank] = bankdict
 
     def extend(self,datadict):
@@ -210,11 +255,26 @@ class hipofile:
         """
         keys = list(datadict.keys())
         nEvents = len(datadict[keys[0]])
-        for event in range(nEvents):
-            for bank in datadict: # This requires datadict shape to be (nEvents,nNames,nRows)
-                self.writeBank(bank,self.dtypes[bank].keys(),datadict[bank][event],dtype="D") #TODO: self.dtypes[bank]
-            self.addEvent()
-        self.writeEvent()
+
+        # Write mode routine
+        if self.mode == "w":
+            for event in range(nEvents):
+                for bank in datadict: # This requires datadict shape to be (nEvents,nNames,nRows)
+                    self.writeBank(bank,self.dtypes[bank].keys(),datadict[bank][event],dtype="D") #TODO: self.dtypes[bank]
+                self.addEvent()
+            self.writeEvent()
+
+        # Append mode routine
+        elif self.mode == "a":
+            for event in range(nEvents):
+                if not self.nextEvent():
+                    print(" *** ERROR *** Tried to more events than are in current file.") #TODO: Implement logging and figure out how to append more events safely.
+                    continue
+                self.writeAllBanks()
+                for bank in datadict: # This requires datadict shape to be (nEvents,nNames,nRows)
+                    self.writeBank(bank,self.dtypes[bank].keys(),datadict[bank][event],dtype="D") #TODO: self.dtypes[bank]
+                self.addEvent()
+            self.writeEvent()
 
     def write(self):
         """
@@ -257,6 +317,13 @@ class hipofile:
         hipo_get_banks_.restype = ctypes.c_char_p
         return hipo_get_banks_().decode('ascii').split(" ")
 
+    def readAllBanks(self):
+        """
+        Description:
+            Read all existing banks to event for appending to file.
+        """
+        self.dataReader.hipo_read_all_banks_()
+
     def readBank(self,bankName,verbose=False):
         """
         Arguments:
@@ -270,6 +337,13 @@ class hipofile:
             ctypes.c_int(len(bankName)),
             verbose
         )
+
+    def getGroup(self):
+        """
+        Description:
+            Get highest # group of all existing schema in reader for initiating file in append mode.
+        """
+        return self.lib.hipo_get_group() #TODO:
 
     def getEntries(self,bankName):
         """
@@ -502,8 +576,8 @@ class hipochainIterator:
             Checks if next file exists and opens if so. 
         """
         # Open file
-        self.file = hipofile(self.chain.names[self.idx],LIBFILENAME)
-        self.file.open(mode=self.chain.mode)
+        self.file = hipofile(self.chain.names[self.idx],LIBFILENAME,mode=self.chain.mode)
+        self.file.open()
         self.idx += 1
 
         # Add banks you want to read
