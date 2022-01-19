@@ -42,7 +42,7 @@ if __name__=="__main__":
     # Loop through batches of step # events in the chain.
     for batch in hippy.iterate(filenames,banks,step=step): # If you don't specify banks, ALL banks will be read.
         print(batch.keys())
-        print(len(batch["NEW::bank_px"]))
+        print(len(batch["NEW::bank_px"])) # Keys are <bank>_<entry>
         if counter == 0: print(ak.Array(batch["NEW::bank_px"]))
         counter += 1
         if counter % step == 0: print("counter = ",counter)
