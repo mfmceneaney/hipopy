@@ -13,7 +13,7 @@ if __name__=="__main__":
 
     # Writing to a new file #NOTE: Appending to files coming soon.
     print("#----------------------------------------------------------------------#")
-    filename = "out.hipo" # Creates this in your $PWD
+    filename = "out.hipo" # Create this in your $PWD
     bank     = "NEW::bank"
     dtype    = "D" #NOTE: For now all the bank entries have to have the same type.
     names    = ["px","py","pz"]
@@ -34,3 +34,29 @@ if __name__=="__main__":
         })
 
     file.close() #IMPORTANT! ( Can also use file.write() )
+
+    # Appending banks to existing file
+    print("#----------------------------------------------------------------------#")
+    # Open file
+    filename = "out.hipo" # Recreate this in your $PWD
+    bank     = "NEW::bank2"
+    dtype    = "D" #NOTE: For now all the bank entries have to have the same type.
+    names    = ["energy","mass"]
+    namesAndTypes = {e:dtype for e in names}
+    rows = 7 # Chooose a #
+    nEvents = 10 # Choose a #
+    step = 5 # Choose a #
+
+    file = hippy.recreate(filename)
+    file.newTree(bank,namesAndTypes)
+    file.open(mode="a") # IMPORTANT!  Open AFTER calling newTree, otherwise the banks will not be written!
+
+    # Write events to file
+    for _ in range(nEvents):
+        data = np.random.random(size=(step,len(names),rows))
+        file.extend({
+            bank : data
+        })
+
+    file.close() #IMPORTANT! ( Can also use file.write() )
+
