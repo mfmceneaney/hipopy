@@ -561,7 +561,7 @@ class hipochain:
         else:
             newnames = []
             for i in range(len(self.names)):
-                files = glob.glob(self.names(i))
+                files = glob.glob(self.names[i])
                 if len(files>0):
                     for file in files:
                         self.newnames.append(file)
