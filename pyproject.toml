@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "hipopy"
-version = "0.1.7"
+version = "0.1.8"
 license = "MIT"
 description = "UpROOT-Like I/O Interface for CLAS12 HIPO Files"
 authors = ["Matthew McEneaney <matthew.mceneaney@duke.edu>"]
