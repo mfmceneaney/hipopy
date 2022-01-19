@@ -34,7 +34,7 @@ if __name__=="__main__":
 
     # Reading a chain of files
     print("#----------------------------------------------------------------------#")
-    filenames = ['misc/test.hipo','misc/out.hipo']
+    filenames = ['misc/tes*.hipo','misc/out.hipo'] #NOTE: Make sure to specify the full path or relative path from directory in which you call this script.
     banks = ["NEW::bank"]
     counter = 0
     step = 100
