@@ -120,7 +120,8 @@ class hipofile:
             self.lib.hipo_write_close_()
         if mode=="a":
             self.lib.hipo_write_close_()
-            #TODO: cp buffer file into intended file
+            # shutil.copy(self.buffname,self.filename) #TODO: Check this
+            # shutil.rm(self.buffname) #TODO: Check this
 
     def goToEvent(self,event):
         """
@@ -387,15 +388,14 @@ class hipofile:
         Description:
             Get a list of the entry names from the data table in the current event's bank.
         """
-        nEntries = self.getEntries(bankName)
-        data = (ctypes.c_char_p * nEntries)()
-        self.lib.hipo_get_bank_entries_names_(
+        hipo_get_bank_entries_names_ = self.lib.hipo_get_bank_entries_names_
+        hipo_get_bank_entries_names_.restype = ctypes.c_char_p
+        return hipo_get_bank_entries_names_(
             ctypes.c_char_p(bankName.encode('ascii')),
             ctypes.c_int(len(bankName)),
-            data
-        )
+        ).decode('ascii').split(' ')
 
-        return [data[i].decode('ascii') for i in range(nEntries)]
+        # return [data[i].decode('ascii') for i in range(nEntries)]
 
     def getTypes(self,bankName):
         """
