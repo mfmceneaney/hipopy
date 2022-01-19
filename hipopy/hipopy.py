@@ -5,6 +5,7 @@
 #----------------------------------------------------------------------#
 
 import os
+import glob
 import sys
 import ctypes
 import numpy as np
@@ -552,7 +553,20 @@ class hipofileIterator:
 class hipochain:
 
     def __init__(self,names,banks="",step=100,mode="r"):
-        self.names   = names #TODO: Figure out how to parse REGEX expression to list
+        self.names   = names
+
+        # Parse regex NOTE: Must be full or relative path from $PWD.  ~/... does not work.
+        if type(self.names)==str:
+            self.names = glob.glob(names)
+        else:
+            newnames = []
+            for i in range(len(self.names)):
+                files = glob.glob(self.names(i))
+                if len(files>0):
+                    for file in files:
+                        self.newnames.append(file)
+            self.names = newnames
+
         self.banks   = banks if banks != "" else self.getBanks()
         self.step    = step
         self.mode    = "r"   #TODO: Does it make sense to just fix this?
