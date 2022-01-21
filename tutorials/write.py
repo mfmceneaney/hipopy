@@ -19,21 +19,25 @@ if __name__=="__main__":
     names    = ["px","py","pz"]
     namesAndTypes = {e:dtype for e in names}
     rows = 7 # Chooose a #
-    nEvents = 10 # Choose a #
-    step = 5 # Choose a #
+    nbatches = 10 # Choose a #
+    step = 5 # Choose a # (events per batch)
 
     file = hippy.create(filename)
     file.newTree(bank,namesAndTypes)
-    file.open(mode="w") # IMPORTANT!  Open AFTER calling newTree, otherwise the banks will not be written!
+    file.open() # IMPORTANT!  Open AFTER calling newTree, otherwise the banks will not be written!
 
-    # Write events to file
-    for _ in range(nEvents):
+    # Write batches of events to file
+    for _ in range(nbatches):
         data = np.random.random(size=(step,len(names),rows))
         file.extend({
             bank : data
         })
 
     file.close() #IMPORTANT! ( Can also use file.write() )
+    del file
+
+    #TODO: Figure out why the file writing is messed up if you already have a hippy.create() object open.
+    #TODO: Figure out how to just create file if it doesn't exist?  -> Can just check and then change mode to create.
 
     # Appending banks to existing file
     print("#----------------------------------------------------------------------#")
@@ -44,15 +48,15 @@ if __name__=="__main__":
     names    = ["energy","mass"]
     namesAndTypes = {e:dtype for e in names}
     rows = 7 # Chooose a #
-    nEvents = 10 # Choose a #
+    nbatches = 10 # Choose a #
     step = 5 # Choose a #
 
     file = hippy.recreate(filename)
     file.newTree(bank,namesAndTypes)
-    file.open(mode="a") # IMPORTANT!  Open AFTER calling newTree, otherwise the banks will not be written!
+    file.open() # IMPORTANT!  Open AFTER calling newTree, otherwise the banks will not be written!
 
     # Write events to file
-    for _ in range(nEvents):
+    for _ in range(nbatches):
         data = np.random.random(size=(step,len(names),rows))
         file.extend({
             bank : data
