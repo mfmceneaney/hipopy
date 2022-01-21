@@ -36,7 +36,7 @@ def open(filename,mode="r"):
     f.open()
     return f
 
-def iterate(files,banks,step=100):
+def iterate(files,banks=None,step=100):
     """
     Arguments:
         files - list of file names
