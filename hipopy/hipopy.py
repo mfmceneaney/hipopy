@@ -552,7 +552,7 @@ class hipofileIterator:
 
 class hipochain:
 
-    def __init__(self,names,banks="",step=100,mode="r"):
+    def __init__(self,names,banks=None,step=100,mode="r"):
         self.names   = names
 
         # Parse regex NOTE: Must be full or relative path from $PWD.  ~/... does not work.
@@ -567,7 +567,7 @@ class hipochain:
                         newnames.append(file)
             self.names = newnames
 
-        self.banks   = banks if banks != "" else self.getBanks()
+        self.banks   = banks
         self.step    = step
         self.mode    = "r"   #TODO: Does it make sense to just fix this?
         self.verbose = False #TODO: Do we really need this?
@@ -588,14 +588,15 @@ class hipochainIterator:
     def switchFile(self):
         """
         Description:
-            Checks if next file exists and opens if so. 
+            Checks if next file exists and opens if so.
         """
         # Open file
         self.file = hipofile(self.chain.names[self.idx],LIBFILENAME,mode=self.chain.mode)
         self.file.open()
         self.idx += 1
+        if self.chain.banks is None: self.chain.banks = self.file.getBanks() #NOTE: This assumes all the files in the chain have the same banks.
 
-        # Add banks you want to read
+        # Read all requested banks
         for b in self.chain.banks:
             self.file.readBank(b,self.chain.verbose)
             helper = self.file.getNamesAndTypes(b)
