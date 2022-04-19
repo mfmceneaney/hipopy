@@ -579,7 +579,7 @@ class hipochainIterator:
 
     def __init__(self,chain):
         self.chain   = chain
-        self.idx     = 0
+        self.idx     = -1
         self.counter = 0
         self.file    = None
         self.items   = {}
@@ -591,9 +591,11 @@ class hipochainIterator:
             Checks if next file exists and opens if so.
         """
         # Open file
+        self.idx += 1 #NOTE: Do this before everything below since we initiate at -1.
+        if (self.idx>=len(self.chain.names)): return #NOTE: Sanity check
         self.file = hipofile(self.chain.names[self.idx],LIBFILENAME,mode=self.chain.mode)
         self.file.open()
-        self.idx += 1
+        
         if self.chain.banks is None: self.chain.banks = self.file.getBanks() #NOTE: This assumes all the files in the chain have the same banks.
 
         # Read all requested banks
@@ -608,8 +610,9 @@ class hipochainIterator:
             Loops files reading requested banks if they exist 
         """
 
-        if self.idx == 0: self.switchFile() # Load first file manually
-        while self.idx<(len(self.chain.names)): #TODO: Check this condition.
+        if self.idx == -1: self.switchFile() # Load first file manually
+
+        if self.idx<(len(self.chain.names)): #TODO: Check this condition.
 
             # Check if output array has been initialized
             if self.dict is None:
