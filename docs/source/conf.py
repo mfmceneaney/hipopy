@@ -1,5 +1,11 @@
 # Configuration file for the Sphinx documentation builder.
 
+import os
+import sys
+
+# -- Add source files for autodoc
+sys.path.insert(0, os.path.abspath('../../hipopy/'))
+
 # -- Project information
 
 project = 'hipopy'
