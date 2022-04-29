@@ -24,7 +24,24 @@ For example:
 
 Reading a Single File
 ---------------------
-Coming soon!
+After opening a file in read mode you can check available 
+names or names and types with the functions 
+``hipofile.getNames`` and ``hipofile.getNamesAndTypes``.
+If you know the column names and types you want
+simply loop through events using the `hipofile` get methods
+to access the data.
+
+>>> import hipopy.hipopy
+>>> f = hipopy.hipopy.open('file.hipo',mode='r')
+>>> f.show()
+               NEW::bank :     1     1     3
+>>> f.readBank('NEW::bank')
+>>> f.showBank('NEW::bank')
+{NEW::bank/1/1}{px/D,py/D,pz/D}
+>>> f.getNamesAndTypes('NEW::bank')
+{'px': 'D', 'py': 'D', 'pz': 'D'}
+>>> for event in file:
+>>>        data = file.getDoubles('NEW::bank','px')
 
 Iterating Many Files
 --------------------
@@ -43,7 +60,36 @@ For example:
 
 Writing Files
 -------------
-Coming soon!
+To write a new hipofile use the ``hipopy.hipopy.create`` function.
+
+.. note::
+   This will overwrite the file if it already exists!
+
+>>> import numpy as np
+>>> import hipopy.hipopy as hipopy
+>>>
+>>> f = hipopy.hipopy.create('new.hipo')
+>>> bank     = "NEW::bank"
+>>> dtype    = "D" #NOTE: For now all the bank entries have to have the same type.
+>>> names    = ["px","py","pz"]
+>>> namesAndTypes = {e:dtype for e in names}
+>>> rows = 7 # Chooose a #
+>>> nbatches = 10 # Choose a #
+>>> step = 5 # Choose a # (events per batch)
+>>>
+>>> # Open file
+>>> file = hipopy.create(filename)
+>>> file.newTree(bank,namesAndTypes)
+>>> file.open() # IMPORTANT:  Open AFTER calling newTree, otherwise the banks will not be written!
+>>>
+>>> # Write batches of events to file
+>>> for _ in range(nbatches):
+>>>     data = np.random.random(size=(step,len(names),rows))
+>>>     file.extend({
+>>>         bank : data
+>>>     })
+>>>
+>>> file.close() # Can also use file.write()
 
 Extending Files
 ---------------
