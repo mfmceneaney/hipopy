@@ -34,9 +34,12 @@ To loop through many files use the
 Batch columns are named using the bank name + item name joined by an underscore.
 
 For example:
+
 >>> import hipopy.hipopy
 >>> for batch in hipopy.hipopy.iterate(['*.hipo'],banks=["NEW::bank"],step=10):
 >>>     print(batch.keys())
+>>>     break
+>>> ['NEW::bank_px','NEW::bank_py','NEW::bank_pz']
 
 Writing Files
 -------------
