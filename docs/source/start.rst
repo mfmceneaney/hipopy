@@ -1,4 +1,4 @@
-Usage
+Getting Started
 =====
 
 .. _installation:
@@ -10,7 +10,7 @@ To use Hipopy, first install it using pip:
 
 .. code-block:: console
 
-   (.venv) $ pip install hipopy
+   $ pip install hipopy
 
 Reading Files
 ----------------
