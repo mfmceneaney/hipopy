@@ -7,7 +7,7 @@ Opening a HIPO File
 ----------------
 
 To open a single HIPO file use the
-``hipopy.hipopy.open(filename,mode='r')`` function:
+``hipopy.hipopy.open`` function:
 
 .. autofunction:: hipopy.hipopy.open
 
@@ -30,7 +30,7 @@ Iterating Many Files
 --------------------
 
 To loop through many files use the 
-``hipopy.hipopy.iterate(filenames,banks=None,step=100)`` function.
+``hipopy.hipopy.iterate`` function.
 Batch columns are named using the bank name + item name joined by an underscore.
 
 For example:
