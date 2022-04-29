@@ -22,6 +22,10 @@ pip install hipopy
 
 Check out the example scripts in `tutorials`.  More functionality coming soon!
 
+## Documentation
+
+Full documentation available on [Read the Docs](https://hipopy.readthedocs.io/en/latest/index.html)!
+
 #
 
 Contact: matthew.mceneaney@duke.edu
