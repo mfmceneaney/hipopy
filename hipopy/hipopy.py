@@ -26,10 +26,15 @@ else:
 
 def open(filename,mode="r"):
     """
-    Arguments:
-        filename - pretty obvious
-        mode     - "r" : read, "w" : write, "a" : append
-    Description:
+    Parameters
+    ---------
+        filename : string, required
+        mode : string, optional
+            File mode ("r" : read, "w" : write, "a" : append)
+            Default : "r"
+
+    Description
+    -----------
         Open a HIPO file to read.
     """
     f = hipofile(filename,LIBFILENAME,mode=mode)
@@ -38,11 +43,21 @@ def open(filename,mode="r"):
 
 def iterate(files,banks=None,step=100):
     """
-    Arguments:
-        files - list of file names
-        banks - list of bank names to read
-    Description:
-        Iterate through
+    Parameters
+    ----------
+        files : list, required
+            List of file names
+        banks : list, optional
+            List of bank names to read
+            Default : None
+        step : int
+            Batch size for iterating through file events
+            Default : 100
+
+    Description
+    -----------
+        Iterate through a list of hipofiles reading all banks unless specific banks are specified.
+        Iteration is broken into batches of step events.
     """
     f = hipochain(files,banks,step=step)
     return f
@@ -50,20 +65,26 @@ def iterate(files,banks=None,step=100):
 
 def create(filename):
     """
-    Arguments:
-        filename - pretty obvious
-    Description:
-        Open a HIPO file to write (from scratch).
+    Parameters
+    ----------
+        filename : string, required
+
+    Description
+    -----------
+        Open a HIPO file to write (overwrites existing files).
     """
     f = hipofile(filename,LIBFILENAME,mode="w")
     return f
 
 def recreate(filename):
     """
-    Arguments:
-        filename - pretty obvious
-    Description:
-        Open a HIPO file to write (from scratch).
+    Parameters
+    ----------
+        filename : string, required
+
+    Description
+    -----------
+        Open an existing HIPO file to write more banks.
     """
     f = hipofile(filename,LIBFILENAME,mode="a")
     f.open() #NOTE: This just opens the reader.  To open the writer, call f.open() again explicitly after adding schema you want to write.
@@ -74,7 +95,80 @@ def recreate(filename):
 
 class hipofile:
 
+    """
+    Attributes
+    ----------
+        filename : string
+            Full path name of HIPO file
+        libpath : string
+            Path to shared library file
+        mode : string
+            File mode ("r" : read, "a" : append, "w" : write)
+        lib : ctypes.CDLL
+            Ctypes library to access HIPO C wrapper
+        status : ctypes.c_int
+            Read status
+        group : int
+            Group number for current HIPO bank (unique)
+        item : int
+            Item number for current HIPO bank (not unique)
+        dtypes : dict
+            Dictionary to datatypes
+        buffext : string
+            Extension for buffer file
+        buffname : string
+            Name of buffer file
+
+    Methods
+    -------
+        open
+        flush
+        close
+        goToEvent
+        nextEvent
+        addSchema
+        addEvent
+        writeEvent
+        writeAllBanks
+        writeBank
+        newTree
+        extend
+        write
+        hasBank
+        show
+        showBank
+        getBanks
+        readAllBanks
+        readBank
+        getGroup
+        getEntries
+        getNamesAndTypes
+        getNames
+        getTypes
+        getRows
+        getInts
+        getFloats
+        getDoubles
+        getShorts
+        getLongs
+
+    """
+
     def __init__(self,filename,libpath,mode="r"):
+
+        """
+        Parameters
+        ----------
+            filename : string, required
+                Full path name of HIPO file
+            libpath : string, required
+                Full path name of HIPO C shared library file
+            mode : string, optional
+                File mode ("r" : read, "w" : write, "a" : append)
+                Default : "r"
+
+        """
+
         self.filename = filename
         self.libpath  = libpath
         self.mode     = mode # "r" : read, "w" : write, "a" : append
@@ -88,7 +182,8 @@ class hipofile:
         
     def open(self):
         """
-        Description:
+        Description
+        -----------
             Open a HIPO file to read, write (from scratch), or append data.
             IMPORTANT:  Make sure you add schema before opening a file to write!
         """
@@ -104,16 +199,21 @@ class hipofile:
             
     def flush(self):
         """
-        Description:
+        Description
+        -----------
             Write current HIPO writer buffer to file.
         """
         self.lib.hipo_write_flush_()
 
     def close(self,mode="w"):
         """
-        Arguments:
-            mode - "r" : read, "w" : write, "a" : append
-        Description:
+        Parameters
+        ----------
+            mode : string, optional
+                Default : "r"
+
+        Description
+        -----------
             Close osstream for an open file.
         """
         if mode=="r": pass #NOTE: Nothing to do here.
@@ -126,11 +226,17 @@ class hipofile:
 
     def goToEvent(self,event):
         """
-        Arguments:
-            event - integer # indicating event # in file (starts at 0)
-        Returns:
-            boolean - True if requested event exists, otherwise False
-        Description:
+        Parameters
+        ----------
+            event : int, required
+                Integer number indicating event number in file (starts at 0)
+
+        Returns
+        -------
+            boolean : True if requested event exists, otherwise False
+
+        Description
+        -----------
             Move to requested HIPO event in a file in read mode.
         """
         self.status = ctypes.c_int(self.lib.hipo_go_to_event_(ctypes.byref(self.status),ctypes.byref(ctypes.c_int(event))))
@@ -139,9 +245,12 @@ class hipofile:
 
     def nextEvent(self):
         """
-        Returns:
-            boolean - True if next event exists, otherwise False
-        Description:
+        Returns
+        -------
+            boolean : True if next event exists else False
+
+        Description
+        -----------
             Move to next HIPO event from a file in read mode.
         """
         self.status = ctypes.c_int(self.lib.hipo_file_next_(ctypes.byref(self.status)))
@@ -150,12 +259,21 @@ class hipofile:
 
     def addSchema(self, name, namesAndTypes, group=-1, item=1):
         """
-        Arguments:
-            name          - bank name
-            namesAndTypes - map of column names to types ("D", "F", "I", "B", "S", "L")
-            group         - group # for bank #TODO Might need to keep track of this.
-            item          - item # for bank 
-        Description:
+        Parameters
+        ----------
+            name : string, required
+                Bank name
+            namesAndTypes : dictionary, required
+                Map of column names to types ("D" : double, "F" : float, "I" : int, "B" : byte, "S" : short, "L" : long)
+            group : int, optional
+                Group number for bank (unique)
+                Default : -1
+            item : int, optional
+                Item number for bank (not unique)
+                Default : 1
+
+        Description
+        -----------
             Add a schema structure to HIPO file writer dictionary for
             a bank you wish to write.  NOTE: Do this BEFORE opening the 
             file in write mode.
@@ -177,21 +295,24 @@ class hipofile:
 
     def addEvent(self):
         """
-        Description:
+        Description
+        -----------
             Adds current hipo event to buffer and advances writer to next event.
         """
         self.lib.hipo_add_event_()
 
     def writeEvent(self):
         """
-        Description:
+        Description
+        -----------
             Writes current hipo event buffer to file.
         """
         self.lib.hipo_write_flush_()
 
     def writeAllBanks(self):
         """
-        Description:
+        Description
+        -----------
             Write all existing banks to event for appending to file.
         """
         self.lib.hipo_write_all_banks_()
@@ -199,12 +320,19 @@ class hipofile:
     def writeBank(self, name, names, data, dtype="D"):
 
         """
-        Arguments:
-            name  - bank name
-            names - column names
-            data  - 2D numpy array of dimension (columns,rows)
-            dtype - data type ("D", "F", "I", "B", "S", "L")
-        Description:
+        Parameters
+        ----------
+            name : string, required
+                Bank name
+            names : list, required
+                Column names
+            data  : numpy.ndarray, required
+                2D NumPy array of dimension (columns,rows)
+            dtype : string, optional
+                Data type ("D" : double, "F" : float, "I" : int, "B" : byte, "S" : short, "L" : long)
+                Default : "D"
+        Description
+        -----------
             Fill an event bank with data and write to buffer.
         """
 
@@ -235,12 +363,21 @@ class hipofile:
 
     def newTree(self,bank,bankdict,group=None,item=None):
         """
-        Arguments:
-            bank     - bank name
-            bankdict - dictionary of bank entry names to data types ("D", "F", "I")
-            group    - group identifier for bank (must be unique)
-            item     - item identifier for bank (does not have to be unique)
-        Description:
+        Parameters
+        ----------
+            bank : string, required
+                Bank name
+            bankdict : dictionary, required
+                Dictionary of bank entry names to data types ("D", "F", "I")
+            group : int, optional
+                Group identifier for bank (must be unique)
+                Default : None
+            item : int, optional
+                Item identifier for bank (does not have to be unique)
+                Default : None
+
+        Description
+        -----------
             Mimics uproot newTree function.
         """
         group = self.group if group is None else group
@@ -250,9 +387,13 @@ class hipofile:
 
     def extend(self,datadict):
         """
-        Arguments:
-            datadict - dictionary of bank names to data arrays of shape (nEvents,nEntries,nRows)
-        Description:
+        Parameters
+        ----------
+            datadict : dictionary, required
+                Dictionary of bank names to data arrays of shape (nEvents,nEntries,nRows)
+
+        Description
+        -----------
             Mimics uproot extend function. NOTE: dtype argument fixed until I figure out how to pass
             different types to C wrapper.
         """
@@ -281,14 +422,21 @@ class hipofile:
 
     def write(self):
         """
-        Alias for self.close()
+        Description
+        -----------
+            Alias for self.close()
         """
         self.close()
 
     def hasBank(self,bankName):
         """
-        Arguments:   bankName - pretty obvious
-        Description: Check if bank exists for current file.
+        Parameters
+        ----------
+            bankName : string, required
+
+        Description
+        -----------
+            Check if bank exists for current file.
         """
         return self.lib.hipo_has_bank_( #TODO: Figure out how to see if bank exists in current event.
             ctypes.c_char_p(bankName.encode('ascii')),
@@ -297,14 +445,21 @@ class hipofile:
 
     def show(self):
         """
-        Description: Print out all available bank names in open file.
+        Description
+        -----------
+            Print out all available bank names in open file.
         """
         self.lib.hipo_show_banks_()
     
     def showBank(self,bankName):
         """
-        Arguments:   bankName - pretty obvious
-        Description: Print out bank contents for current event.
+        Parameters
+        ---------
+            bankName : string, required
+
+        Description
+        -----------
+            Print out bank contents for current event.
         """
         self.lib.hipo_show_bank_(
             ctypes.c_char_p(bankName.encode('ascii')),
@@ -313,7 +468,8 @@ class hipofile:
 
     def getBanks(self):
         """
-        Description:
+        Description
+        -----------
             Returns a list of all bank names in the reader dictionary.
         """
         hipo_get_banks_ = self.lib.hipo_get_banks_
@@ -322,17 +478,22 @@ class hipofile:
 
     def readAllBanks(self):
         """
-        Description:
+        Description
+        -----------
             Read all existing banks to event for appending to file.
         """
         self.lib.hipo_read_all_banks_()
 
     def readBank(self,bankName,verbose=False):
         """
-        Arguments:
-            bankName - pretty obvious
-            verbose  - print out loading message for each event if true
-        Description:
+        Parameters
+        ----------
+            bankName : string, required
+            verbose : boolean, optional
+                Print out loading message for each event if True
+
+        Description
+        -----------
             Setup to read bank contents for each event into memory.
         """
         self.lib.hipo_read_bank_(
@@ -343,16 +504,20 @@ class hipofile:
 
     def getGroup(self):
         """
-        Description:
+        Description
+        -----------
             Get highest # group of all existing schema in reader for initiating file in append mode.
         """
         return self.lib.hipo_get_group() #TODO:
 
     def getEntries(self,bankName):
         """
-        Arguments:
-            bankName - pretty obvious
-        Description:
+        Parameters
+        ----------
+            bankName : string, required
+
+        Description
+        -----------
             Get # of entries in bank.  Make sure you read bank first 
             with readBank(bankName) method above.
         """
@@ -363,11 +528,17 @@ class hipofile:
 
     def getNamesAndTypes(self,bankName):
         """
-        Arguments:
-            bankName - pretty obvious
-        Returns:
-            data     - ctypes c_char_p array containing the bank entries
-        Description:
+        Parameters
+        ----------
+            bankName : string, required
+
+        Returns
+        -------
+            data : ctypes.c_char_p array
+                ctypes c_char_p array containing the bank entries
+
+        Description
+        -----------
             Get a list of the entry names from the data table in the current event's bank.
         """
         hipo_get_bank_entries_names_types_ = self.lib.hipo_get_bank_entries_names_types_
@@ -382,11 +553,17 @@ class hipofile:
     
     def getNames(self,bankName):
         """
-        Arguments:
-            bankName - pretty obvious
-        Returns:
-            data     - ctypes c_char_p array containing the bank entries
-        Description:
+        Parameters
+        ----------
+            bankName : string, required
+
+        Returns
+        -------
+            data : ctypes c_char_p array
+                ctypes c_char_p array containing the bank entries
+
+        Description
+        -----------
             Get a list of the entry names from the data table in the current event's bank.
         """
         hipo_get_bank_entries_names_ = self.lib.hipo_get_bank_entries_names_
@@ -400,11 +577,16 @@ class hipofile:
 
     def getTypes(self,bankName):
         """
-        Arguments:
-            bankName - pretty obvious
-        Returns:
-            data     - ctypes c_char_p array containing the bank entries
-        Description:
+        Parameters
+        ----------
+            bankName : string, required
+
+        Returns
+        -------
+            data : ctypes c_char_p array containing the bank entries
+
+        Description
+        -----------
             Get a list of the entry types from the data table in the current event's bank.
         """
         nEntries = self.getEntries(bankName)
@@ -419,9 +601,12 @@ class hipofile:
 
     def getRows(self,bankName):
         """
-        Arguments:
-            bankName - pretty obvious
-        Description:
+        Parameters
+        ----------
+            bankName : string, required
+
+        Description
+        -----------
             Get # of rows in bank.  Make sure you read bank first 
             with readBank(bankName) method above.
         """
@@ -432,12 +617,19 @@ class hipofile:
 
     def getInts(self,bankName,item):
         """
-        Arguments:
-            bankName - pretty obvious
-            item     - column name you wish to read in bank
-        Returns:
-            data     - ctypes int array containing the bank entries
-        Description:
+        Parameters
+        ----------
+            bankName : string, required
+            item : string, required
+                Column name you wish to read in bank
+
+        Returns
+        -------
+            data : ctypes int array
+                ctypes int array containing the bank entries
+
+        Description
+        -----------
             Get a column of ints from the data table in the current event's bank.
         """
         bankRows = self.getRows(bankName)
@@ -453,12 +645,19 @@ class hipofile:
 
     def getFloats(self,bankName,item):
         """
-        Arguments:
-            bankName - pretty obvious
-            item     - column name you wish to read in bank
-        Returns:
-            data     - ctypes float array containing the bank entries
-        Description:
+        Parameters
+        ----------
+            bankName : string, required
+            item : string, required
+                Column name you wish to read in bank
+
+        Returns
+        -------
+            data : cyptes float array
+                Ctypes float array containing the bank entries
+
+        Description
+        -----------
             Get a column of floats from the data table in the current event's bank.
         """
         bankRows = self.getRows(bankName)
@@ -474,12 +673,19 @@ class hipofile:
 
     def getDoubles(self,bankName,item):
         """
-        Arguments:
-            bankName - pretty obvious
-            item     - column name you wish to read in bank
-        Returns:
-            data     - ctypes double array containing the bank entries
-        Description:
+        Parameters
+        ----------
+            bankName : string, required
+            item : string, required
+                Column name you wish to read in bank
+
+        Returns
+        -------
+            data : ctypes double array
+                Ctypes double array containing the bank entries
+
+        Description
+        -----------
             Get a column of doubles from the data table in the current event's bank.
         """
         bankRows = self.getRows(bankName)
@@ -495,12 +701,19 @@ class hipofile:
 
     def getShorts(self,bankName,item):
         """
-        Arguments:
-            bankName - pretty obvious
-            item     - column name you wish to read in bank
-        Returns:
-            data     - ctypes short array containing the bank entries
-        Description:
+        Parameters
+        ----------
+            bankName : string, required
+            item : string, required
+                Column name you wish to read in bank
+
+        Returns
+        -------
+            data : ctypes short array
+                Ctypes short array containing the bank entries
+
+        Description
+        -----------
             Get a column of shorts from the data table in the current event's bank.
         """
         bankRows = self.getRows(bankName)
@@ -516,12 +729,19 @@ class hipofile:
 
     def getLongs(self,bankName,item):
         """
-        Arguments:
-            bankName - pretty obvious
-            item     - column name you wish to read in bank
-        Returns:
-            data     - ctypes long array containing the bank entries
-        Description:
+        Parameters
+        ----------
+            bankName : string, required
+            item : string, required
+                Column name you wish to read in bank
+
+        Returns
+        -------
+            data : ctypes long array
+                Ctypes long array containing the bank entries
+
+        Description
+        -----------
             Get a column of longs from the data table in the current event's bank.
         """
         bankRows = self.getRows(bankName)
@@ -540,6 +760,12 @@ class hipofile:
 
 class hipofileIterator:
 
+    """
+    Description
+    -----------
+        Iterator class for hipopy.hipopy.hipoFile class
+    """
+
     def __init__(self,hipofile):
         self.hipofile = hipofile
         self.idx = 0
@@ -551,6 +777,25 @@ class hipofileIterator:
         raise StopIteration
 
 class hipochain:
+
+    """
+    Attributes
+    ----------
+        names : list
+            List of file names in hipochain
+        banks : list
+            List of bank names to be read
+        step : int
+            Batch size for reading banks
+        mode : string
+            Currently fixed to always be in read mode ("r")
+        verbose : boolean
+            Currently fixed to always be False
+
+    Description
+    -----------
+        Chains files together so they may be read continuously.
+    """
 
     def __init__(self,names,banks=None,step=100,mode="r"):
         self.names   = names
@@ -577,6 +822,31 @@ class hipochain:
 
 class hipochainIterator:
 
+    """
+    Attributes
+    ----------
+        chain : hipopy.hipopy.hipochain
+            Hipochain object overwhich to iterate
+        idx : int
+            Index of current file in hipochain
+        counter : int
+            Event counter for batching data
+        file : hipopy.hipopy.hipoFile
+            Current file in hipochain
+        items : dict
+            Dictionary of bank names to item names to read
+        dict : dict
+            Dictionary into which Hipo bank data is read
+
+    Methods
+    -------
+        switchFile
+
+    Description
+    -----------
+        Iterator for hipopy.hipopy.hipochain class
+    """
+
     def __init__(self,chain):
         self.chain   = chain
         self.idx     = -1
@@ -587,8 +857,9 @@ class hipochainIterator:
 
     def switchFile(self):
         """
-        Description:
-            Checks if next file exists and opens if so.
+        Description
+        -----------
+            Checks if next file in chain exists and then opens and reads requested banks if so.
         """
         # Open file
         self.idx += 1 #NOTE: Do this before everything below since we initiate at -1.
@@ -606,7 +877,8 @@ class hipochainIterator:
 
     def __next__(self):
         """
-        Description:
+        Description
+        -----------
             Loops files reading requested banks if they exist 
         """
 
