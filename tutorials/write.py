@@ -33,8 +33,7 @@ if __name__=="__main__":
             bank : data
         })
 
-    file.close() #IMPORTANT! ( Can also use file.write() )
-    del file
+    file.close()
 
     #TODO: Figure out why the file writing is messed up if you already have a hippy.create() object open.
     #TODO: Figure out how to just create file if it doesn't exist?  -> Can just check and then change mode to create.
@@ -54,7 +53,7 @@ if __name__=="__main__":
     file = hippy.recreate(filename)
     file.newTree(bank,namesAndTypes)
     file.open() # IMPORTANT!  Open AFTER calling newTree, otherwise the banks will not be written!
-
+    
     # Write events to file
     for _ in range(nbatches):
         data = np.random.random(size=(step,len(names),rows))
