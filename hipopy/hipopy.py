@@ -220,8 +220,9 @@ class hipofile:
             self.lib.hipo_write_close_()
         if mode=="a":
             self.lib.hipo_write_close_()
-            # shutil.copy(self.buffname,self.filename) #TODO: Check this
-            # shutil.rm(self.buffname) #TODO: Check this
+            shutil.copy(self.buffname,self.filename) #TODO: Check this
+            shutil.rm(self.buffname) #TODO: Check this
+        #self.lib.dlclose()#DEBUGGING
 
     def goToEvent(self,event):
         """
@@ -265,7 +266,8 @@ class hipofile:
         name : string, required
             Bank name
         namesAndTypes : dictionary, required
-            Map of column names to types ("D" : double, "F" : float, "I" : int, "B" : byte, "S" : short, "L" : long)
+            Map of column names to types ("D" : double, "F" : float, 
+            "I" : int, "B" : byte, "S" : short, "L" : long)
         group : int, optional
             Group number for bank (unique)
             Default : -1
@@ -285,12 +287,12 @@ class hipofile:
         schemaString = ",".join( ["/".join( [key,namesAndTypes[key]] ) for key in namesAndTypes] )
         if group <= self.group or group < 0:
             self.group += 1
-            group = self.group
+            # group = self.group #DEBUGGING: COMMENTED OUT SINCE SWITCHED TO USING self.group BELOW.
 
         self.lib.hipo_add_schema_(
             schemaString.encode("ascii"),
             name.encode("ascii"),
-            ctypes.c_int(group),
+            ctypes.c_int(self.group),
             ctypes.c_int(item)
         )
 
@@ -414,9 +416,9 @@ class hipofile:
         elif self.mode == "a":
             for event in range(nEvents):
                 if not self.nextEvent():
-                    print(" *** ERROR *** Tried to more events than are in current file.") #TODO: Implement logging and figure out how to append more events safely.
-                    continue
-                self.writeAllBanks()
+                    print(" *** ERROR *** Tried to append more events than are in current file. Stopping.") #TODO: Implement logging and figure out how to append more events safely.
+                    break
+                # self.writeAllBanks() #NOTE: DEBUGGING COMMENTING THIS OUT FIXED THE EVERY nEVENTS ERROR WHEN READING WRITTEN FILE!
                 for bank in datadict: # This requires datadict shape to be (nEvents,nNames,nRows)
                     self.writeBank(bank,self.dtypes[bank].keys(),datadict[bank][event],dtype="D") #TODO: self.dtypes[bank]
                 self.addEvent()
@@ -639,7 +641,6 @@ class hipofile:
         -----------
         Get a column of ints from the data table in the current event's bank.
         """
-
         bankRows = self.getRows(bankName)
         data = (ctypes.c_int * bankRows)()
         self.lib.hipo_get_ints(
@@ -668,7 +669,6 @@ class hipofile:
         -----------
         Get a column of floats from the data table in the current event's bank.
         """
-
         bankRows = self.getRows(bankName)
         data = (ctypes.c_float * bankRows)()
         self.lib.hipo_get_floats(
@@ -697,7 +697,6 @@ class hipofile:
         -----------
         Get a column of doubles from the data table in the current event's bank.
         """
-
         bankRows = self.getRows(bankName)
         data = (ctypes.c_double * bankRows)()
         self.lib.hipo_get_doubles(
@@ -726,7 +725,6 @@ class hipofile:
         -----------
         Get a column of shorts from the data table in the current event's bank.
         """
-
         bankRows = self.getRows(bankName)
         data = (ctypes.c_short * bankRows)()
         self.lib.hipo_get_shorts(
@@ -755,10 +753,37 @@ class hipofile:
         -----------
         Get a column of longs from the data table in the current event's bank.
         """
-
         bankRows = self.getRows(bankName)
         data = (ctypes.c_long * bankRows)()
         self.lib.hipo_get_longs(
+            ctypes.c_char_p(bankName.encode('ascii')),
+            ctypes.c_int(len(bankName)),
+            ctypes.c_char_p(item.encode('ascii')),
+            ctypes.c_int(len(item)),
+            data
+        )
+        return data
+
+    def getBytes(self,bankName,item):
+        """
+        Parameters
+        ----------
+        bankName : string, required
+        item : string, required
+            Column name you wish to read in bank
+
+        Returns
+        -------
+        data : ctypes c_int array
+            ctypes c_int array containing the bank entries
+
+        Description
+        -----------
+        Get a column of bytes from the data table in the current event's bank.
+        """
+        bankRows = self.getRows(bankName)
+        data = (ctypes.c_long * bankRows)()
+        self.lib.hipo_get_bytes(
             ctypes.c_char_p(bankName.encode('ascii')),
             ctypes.c_int(len(bankName)),
             ctypes.c_char_p(item.encode('ascii')),
@@ -913,6 +938,8 @@ class hipochainIterator:
                         elif self.items[bank][item]=="I": data = self.file.getInts(bank,item)
                         elif self.items[bank][item]=="D": data = self.file.getDoubles(bank,item)
                         elif self.items[bank][item]=="L": data = self.file.getLongs(bank,item)
+                        elif self.items[bank][item]=="S": data = self.file.getShorts(bank,item)
+                        elif self.items[bank][item]=="B": data = self.file.getBytes(bank,item)
 
                         # Add bank data to batch dictionary
                         if not bank+"_"+item in self.dict.keys() : self.dict[bank+"_"+item] = [np.array(data)]
