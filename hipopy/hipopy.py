@@ -7,6 +7,7 @@
 import os
 import glob
 import sys
+import shutil
 import ctypes
 import numpy as np
 import numpy.ma as ma
