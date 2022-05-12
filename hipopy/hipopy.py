@@ -170,7 +170,8 @@ class hipofile:
         self.filename = filename
         self.libpath  = libpath
         self.mode     = mode # "r" : read, "w" : write, "a" : append
-        self.lib      = ctypes.CDLL(self.libpath)
+        self.loader   = ctypes.LibraryLoader(ctypes.CDLL)#DEBUGGING
+        self.lib      = self.loader.LoadLibrary(self.libpath)#DEBUGGING <-------- #OLD: ctypes.CDLL(self.libpath)
         self.status   = ctypes.c_int(0)
         self.group    = 0
         self.item     = 1
@@ -203,7 +204,7 @@ class hipofile:
         """
         self.lib.hipo_write_flush_()
 
-    def close(self,mode="w"):
+    def close(self):
         """
         Parameters
         ----------
@@ -215,14 +216,13 @@ class hipofile:
         Close osstream for an open file.
         """
 
-        if mode=="r": pass #NOTE: Nothing to do here.
-        if mode=="w":
+        if self.mode=="r": pass #NOTE: Nothing to do here.
+        if self.mode=="w":
             self.lib.hipo_write_close_()
-        if mode=="a":
+        if self.mode=="a":
             self.lib.hipo_write_close_()
             shutil.copy(self.buffname,self.filename) #TODO: Check this
             shutil.rm(self.buffname) #TODO: Check this
-        #self.lib.dlclose()#DEBUGGING
 
     def goToEvent(self,event):
         """
