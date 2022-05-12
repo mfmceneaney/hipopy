@@ -808,10 +808,38 @@ class hipofileIterator:
         self.hipofile = hipofile
         self.idx = 0
 
+        if self.hipofile.mode != "w":
+            self.hipofile.readAllBanks()#IMPORTANT!
+            self.banks = self.hipofile.getBanks()
+            self.verbose = False #NOTE: Not really necessary.
+            self.items = {}
+        
+            # Read all requested banks
+            for b in self.banks:
+                self.hipofile.readBank(b,self.verbose)
+                helper = self.hipofile.getNamesAndTypes(b) #NOTE: #TODO: This breaks down if you repeat with the file open.
+                self.items[b] = helper
+
     def __next__(self):
         if self.hipofile.nextEvent():
             self.idx += 1
-            return self.hipofile #TODO: This is kind of useless right now.
+            event = {}
+
+            # Get bank data
+            for bank in self.banks:
+                for item in self.items[bank]:
+                    data = []
+                    if   self.items[bank][item]=="F": data = self.hipofile.getFloats(bank,item)
+                    elif self.items[bank][item]=="I": data = self.hipofile.getInts(bank,item)
+                    elif self.items[bank][item]=="D": data = self.hipofile.getDoubles(bank,item)
+                    elif self.items[bank][item]=="L": data = self.hipofile.getLongs(bank,item)
+                    elif self.items[bank][item]=="S": data = self.hipofile.getShorts(bank,item)
+                    elif self.items[bank][item]=="B": data = self.hipofile.getBytes(bank,item)
+
+                    # Add bank data to event dictionary
+                    event[bank+"_"+item] = [np.array(data)]
+
+            return event
         raise StopIteration
 
 class hipochain:
