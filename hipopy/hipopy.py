@@ -223,7 +223,7 @@ class hipofile:
         if self.mode=="a":
             self.lib.hipo_write_close_()
             shutil.copy(self.buffname,self.filename) #TODO: Check this
-            shutil.rm(self.buffname) #TODO: Check this
+            os.remove(self.buffname) #TODO: Check this
 
     def goToEvent(self,event):
         """
