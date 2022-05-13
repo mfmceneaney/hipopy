@@ -27,7 +27,8 @@ if __name__=="__main__":
     for event in file:
         data = file.getDoubles(bankName,item)
         print("counter = ",counter)
-        print("data = ",np.array(data))
+        print("event   = ",event)
+        print("data    = ",np.array(data))
         counter += 1
         if counter == maxEvents: break
 
@@ -41,7 +42,6 @@ if __name__=="__main__":
     # Loop through batches of step # events in the chain.
     for batch in hippy.iterate(filenames,banks,step=step): # If you don't specify banks, ALL banks will be read.
         print(batch.keys())
-        print(len(batch["NEW::bank_px"])) # Keys are <bank>_<entry>
-        if counter == 0: print(ak.Array(batch["NEW::bank_px"]))
+        if "NEW::bank_px" in batch: print(ak.Array(batch["NEW::bank_px"])) # Keys are <bank>_<entry>
         counter += 1
         if counter % step == 0: print("counter = ",counter)
