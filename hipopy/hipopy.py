@@ -425,6 +425,27 @@ class hipofile:
                 self.addEvent()
             self.writeEvent()
 
+    def update(self,datadict):
+        """
+        Parameters
+        ----------
+        datadict : dictionary, required
+            Dictionary of bank names to data arrays of shape (nEntries,nRows)
+
+        Description
+        -----------
+        Append one set of event banks at a time and do not progress to the 
+        next event automatically. NOTE: dtype argument fixed until I figure out how to pass
+        different types to C wrapper.
+        """
+
+        # Append mode routine
+        if self.mode == "a":
+            for bank in datadict: # This requires datadict shape to be (nNames,nRows)
+                self.writeBank(bank,self.dtypes[bank].keys(),datadict[bank],dtype="D") #TODO: self.dtypes[bank]
+            self.addEvent()
+            self.writeEvent()
+
     def write(self):
         """
         Description
