@@ -12,8 +12,8 @@ project = 'hipopy'
 copyright = '2022, Matthew McEneaney'
 author = 'Matthew McEneaney'
 
-release = '0.1'
-version = '0.1.9'
+release = '0.2'
+version = '0.2.1'
 
 # -- General configuration
 
