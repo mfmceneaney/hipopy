@@ -821,7 +821,7 @@ class hipofileIterator:
                 self.items[b] = helper
 
     def __next__(self):
-        if self.hipofile.nextEvent():
+        if self.hipofile.nextEvent(): #NOTE: #TODO: #DEBUGGING: Good for reading but need a different method for appending!
             self.idx += 1
             event = {}
 
