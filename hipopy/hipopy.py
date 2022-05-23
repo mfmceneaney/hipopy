@@ -8,19 +8,10 @@ import os
 import glob
 import sys
 import shutil
-import ctypes
 import numpy as np
 import numpy.ma as ma
 import awkward as ak
-
-#----------------------------------------------------------------------#
-# Set path to shared library depending on system type
-
-LIBFILENAME = os.path.abspath(os.path.dirname(__file__))
-if sys.platform == "darwin":
-    LIBFILENAME = os.path.join(LIBFILENAME,"../hipo/libhipo4.dylib")
-else: 
-    LIBFILENAME = os.path.join(LIBFILENAME,"../hipo/libhipo4.so")
+import hipopybind
 
 #----------------------------------------------------------------------#
 # Basic  I/O behaviors
@@ -38,7 +29,7 @@ def open(filename,mode="r"):
     -----------
     Open a HIPO file to read.
     """
-    f = hipofile(filename,LIBFILENAME,mode=mode)
+    f = hipofile(filename,mode=mode)
     f.open()
     return f
 
@@ -74,7 +65,7 @@ def create(filename):
     -----------
     Open a HIPO file to write (overwrites existing files).
     """
-    f = hipofile(filename,LIBFILENAME,mode="w")
+    f = hipofile(filename,mode="w")
     return f
 
 def recreate(filename):
@@ -87,7 +78,7 @@ def recreate(filename):
     -----------
     Open an existing HIPO file to write more banks.
     """
-    f = hipofile(filename,LIBFILENAME,mode="a")
+    f = hipofile(filename,mode="a")
     f.open() #NOTE: This just opens the reader.  To open the writer, call f.open() again explicitly after adding schema you want to write.
     return f
 
@@ -105,10 +96,14 @@ class hipofile:
         Path to shared library file
     mode : string
         File mode ("r" : read, "a" : append, "w" : write)
-    lib : ctypes.CDLL
-        ctypes library to access HIPO C wrapper
-    status : ctypes.c_int
-        Read status
+    reader : hipopybind.Reader
+        HIPO file reader
+    writer : hipopybind.Writer
+        HIPO file writer
+    dict : hipopybind.Dictionary
+        HIPO file schema dictionary
+    event : hipopybind.Event
+        HIPO event for reading and writing banks
     group : int
         Group number for current HIPO bank (unique)
     item : int
@@ -154,31 +149,27 @@ class hipofile:
     # getShorts
     # getLongs
 
-    def __init__(self,filename,libpath,mode="r"):
-
+    def __init__(self,filename,mode="r"):
         """
         Parameters
         ----------
         filename : string, required
             Full path name of HIPO file
-        libpath : string, required
-            Full path name of HIPO C shared library file
         mode : string, optional
             File mode ("r" : read, "w" : write, "a" : append)
             Default : "r"
         """
-
-        self.filename = filename
-        self.libpath  = libpath
-        self.mode     = mode # "r" : read, "w" : write, "a" : append
-        self.loader   = ctypes.LibraryLoader(ctypes.CDLL)#DEBUGGING
-        self.lib      = self.loader.LoadLibrary(self.libpath)#DEBUGGING <-------- #OLD: ctypes.CDLL(self.libpath)
-        self.status   = ctypes.c_int(0)
-        self.group    = 0
-        self.item     = 1
-        self.dtypes   = {}
-        self.buffext  = "~"
-        self.buffname = None
+        self.filename   = filename
+        self.reader     = hipopybind.Reader() if mode != "w" else None
+        self.writer     = hipopybind.Writer() if mode != "r" else None
+        self.dictionary = hipopybind.Dictionary()
+        self.event      = hipopybind.Event()
+        self.mode       = mode # "r" : read, "w" : write, "a" : append
+        self.group      = 0
+        self.item       = 1
+        self.dtypes     = {}
+        self.buffext    = "~"
+        self.buffname   = None
         
     def open(self):
         """
@@ -187,15 +178,36 @@ class hipofile:
         Open a HIPO file to read, write (from scratch), or append data.
         IMPORTANT:  Make sure you add schema before opening a file to write!
         """
-        if self.mode=="r": self.lib.hipo_file_open(self.filename.encode('ascii'))
-        if self.mode=="w": self.lib.hipo_write_open_(self.filename.encode('ascii'))
-        if self.mode=="a" and self.buffname is None:
-            self.lib.hipo_file_open(self.filename.encode('ascii'))
-            self.lib.hipo_read_all_banks_()
-            self.group = self.lib.hipo_get_group_()
+        if self.mode=="r":
+            self.reader.open(self.filename)
+            self.reader.readDictionary(self.dictionary)
+        elif self.mode=="w": self.writer.open(self.filename)
+        elif self.mode=="a" and self.buffname is None:
+
+            # Open with reader first
+            self.reader.open(self.filename)
+            self.reader.readDictionary(self.dictionary)
+
+            # Read all existing banks
+            for schema in self.dictionary.getSchemaList():
+                bank = hipopybind.Bank(self.dictionary.getSchema(schema))
+                self.event.getStructure(bank)
+
+            # Set group number to highest so far
+            self.group = 0
+            for schema in self.dictionary.getSchemaList():
+                g = self.dictionary.getSchema(schema).getGroup()
+                if self.group < g: self.group = g
+
+            # Add existing banks to writer dictionary if in append mode
+            if self.mode == "a": self.writer.addDictionary(self.dictionary)
+            
+            # Set buffername
             self.buffname = self.filename + self.buffext #NOTE: Separate code here so that you can call addSchema()
+
         elif self.mode=="a" and self.buffname is not None:
-            self.lib.hipo_write_open_(self.buffname.encode('ascii'))
+            # Now open with writer after adding schema to write
+            self.writer.open(self.buffname)
             
     def flush(self):
         """
@@ -203,7 +215,7 @@ class hipofile:
         -----------
         Write current HIPO writer buffer to file.
         """
-        self.lib.hipo_write_flush_()
+        self.writer.flush()
 
     def close(self):
         """
@@ -216,12 +228,11 @@ class hipofile:
         -----------
         Close osstream for an open file.
         """
-
         if self.mode=="r": pass #NOTE: Nothing to do here.
         if self.mode=="w":
-            self.lib.hipo_write_close_()
+            self.writer.close()
         if self.mode=="a":
-            self.lib.hipo_write_close_()
+            self.writer.close()
             shutil.copy(self.buffname,self.filename) #TODO: Check this
             os.remove(self.buffname) #TODO: Check this
 
@@ -241,9 +252,9 @@ class hipofile:
         -----------
         Move to requested HIPO event in a file in read mode.
         """
-        self.status = ctypes.c_int(self.lib.hipo_go_to_event_(ctypes.byref(self.status),ctypes.byref(ctypes.c_int(event))))
-        if self.status.value==0: return True
-        return False
+        self.status = self.reader.gotoEvent(event)
+        self.reader.read(self.event) #TODO: This currently seg faults...
+        return self.status
 
     def nextEvent(self):
         """
@@ -256,9 +267,9 @@ class hipofile:
         -----------
         Move to next HIPO event from a file in read mode.
         """
-        self.status = ctypes.c_int(self.lib.hipo_file_next_(ctypes.byref(self.status)))
-        if self.status.value==0: return True
-        return False
+        self.status = self.reader.next()
+        self.reader.read(self.event)
+        return self.status
 
     def addSchema(self, name, namesAndTypes, group=-1, item=1):
         """
@@ -282,20 +293,17 @@ class hipofile:
         a bank you wish to write.  NOTE: Do this BEFORE opening the 
         file in write mode.
         """
-
         names = namesAndTypes.keys()
         types = namesAndTypes.values()
         schemaString = ",".join( ["/".join( [key,namesAndTypes[key]] ) for key in namesAndTypes] )
         if group <= self.group or group < 0:
             self.group += 1
-            # group = self.group #DEBUGGING: COMMENTED OUT SINCE SWITCHED TO USING self.group BELOW.
 
-        self.lib.hipo_add_schema_(
-            schemaString.encode("ascii"),
-            name.encode("ascii"),
-            ctypes.c_int(self.group),
-            ctypes.c_int(item)
-        )
+        schema = hipopybind.Schema(name,max(self.group,group),item) #NOTE: Important to use this constructor here.
+        schema.parse(schemaString)
+        d = hipopybind.Dictionary()
+        d.addSchema(schema)
+        self.writer.addDictionary(d)
 
     def addEvent(self):
         """
@@ -303,7 +311,7 @@ class hipofile:
         -----------
         Adds current hipo event to buffer and advances writer to next event.
         """
-        self.lib.hipo_add_event_()
+        self.writer.addEvent(self.event)
 
     def writeEvent(self):
         """
@@ -311,7 +319,7 @@ class hipofile:
         -----------
         Writes current hipo event buffer to file.
         """
-        self.lib.hipo_write_flush_()
+        self.writer.flush()
 
     def writeAllBanks(self):
         """
@@ -319,10 +327,12 @@ class hipofile:
         -----------
         Write all existing banks to event for appending to file.
         """
-        self.lib.hipo_write_all_banks_()
+        for schema in self.writer.getDictionary().getSchemaList():
+            bank = hipopybind.Bank(self.writer.getDictionary().getSchema(schema))
+            self.event.getStructure(bank)
+            self.event.addStructure(bank)
 
-    def writeBank(self, name, names, data, dtype="D"):
-
+    def writeBank(self, name, names, data, dtypes="D"):
         """
         Parameters
         ----------
@@ -340,31 +350,36 @@ class hipofile:
         -----------
         Fill an event bank with data and write to buffer.
         """
+        schema = self.writer.getDictionary().getSchema(name)
+        rows   = np.shape(data)[-1]
+        bank   = hipopybind.Bank(schema,rows)
 
-        # Define (2D, ndim=1 for 2D---it's confusing) array type 
-        _2d = np.ctypeslib.ndpointer(dtype=np.uintp, ndim=1, flags='C')
+        # Add data to bank
+        for idx, entry in enumerate(names):
+            dtype = dtypes if len(dtypes)==1 else dtypes[idx]
+            if dtype=="D":
+                for i in range(rows):
+                    bank.putDouble(entry,i,data[idx,i])
+            elif dtype=="F":
+                for i in range(rows):
+                    bank.putFloat(entry,i,data[idx,i])
+            elif dtype=="I":
+                for i in range(rows):
+                    bank.putInt(entry,i,data[idx,i])
+            elif dtype=="B":
+                for i in range(rows):
+                    bank.putByte(entry,i,data[idx,i])
+            elif dtype=="S":
+                for i in range(rows):
+                    bank.putShort(entry,i,data[idx,i])
+            elif dtype=="L":
+                for i in range(rows):
+                    bank.putLong(entry,i,data[idx,i])
+            else:
+                raise TypeError
 
-        # Specify argument types for C function
-        hipo_write_bank_ = self.lib.hipo_write_bank_
-        hipo_write_bank_.argtypes = [
-            ctypes.c_char_p, ctypes.POINTER(ctypes.c_char_p), _2d,
-            ctypes.c_int, ctypes.c_int, ctypes.c_char_p
-            ] 
-        hipo_write_bank_.restype = None
-
-        # Format arguments
-        names = (ctypes.c_char_p * len(names))(*[ctypes.c_char_p(n.encode("ascii")) for n in names])
-        x = (data.__array_interface__['data'][0]
-            + np.arange(data.shape[0])*data.strides[0]).astype(np.uintp)
-
-        self.lib.hipo_write_bank_(
-            ctypes.c_char_p(name.encode("ascii")),
-            names,
-            x,
-            ctypes.c_int(np.shape(data)[0]),
-            ctypes.c_int(np.shape(data)[1]),
-            dtype.encode("ascii")
-        )
+        # Add bank to event
+        self.event.addStructure(bank)
 
     def newTree(self,bank,bankdict,group=None,item=None):
         """
@@ -409,7 +424,7 @@ class hipofile:
         if self.mode == "w":
             for event in range(nEvents):
                 for bank in datadict: # This requires datadict shape to be (nEvents,nNames,nRows)
-                    self.writeBank(bank,self.dtypes[bank].keys(),datadict[bank][event],dtype="D") #TODO: self.dtypes[bank]
+                    self.writeBank(bank,list(self.dtypes[bank].keys()),datadict[bank][event],dtypes=list(self.dtypes[bank].values()))
                 self.addEvent()
             self.writeEvent()
 
@@ -419,9 +434,8 @@ class hipofile:
                 if not self.nextEvent():
                     print(" *** ERROR *** Tried to append more events than are in current file. Stopping.") #TODO: Implement logging and figure out how to append more events safely.
                     break
-                # self.writeAllBanks() #NOTE: DEBUGGING COMMENTING THIS OUT FIXED THE EVERY nEVENTS ERROR WHEN READING WRITTEN FILE!
                 for bank in datadict: # This requires datadict shape to be (nEvents,nNames,nRows)
-                    self.writeBank(bank,self.dtypes[bank].keys(),datadict[bank][event],dtype="D") #TODO: self.dtypes[bank]
+                    self.writeBank(bank,self.dtypes[bank].keys(),datadict[bank][event],dtypes=list(self.dtypes[bank].values()))
                 self.addEvent()
             self.writeEvent()
 
@@ -438,11 +452,10 @@ class hipofile:
         next event automatically. NOTE: dtype argument fixed until I figure out how to pass
         different types to C wrapper.
         """
-
         # Append mode routine
         if self.mode == "a":
             for bank in datadict: # This requires datadict shape to be (nNames,nRows)
-                self.writeBank(bank,self.dtypes[bank].keys(),datadict[bank],dtype="D") #TODO: self.dtypes[bank]
+                self.writeBank(bank,self.dtypes[bank].keys(),datadict[bank],dtypes=list(self.dtypes[bank].values()))
             self.addEvent()
             self.writeEvent()
 
@@ -464,10 +477,7 @@ class hipofile:
         -----------
         Check if bank exists for current file.
         """
-        return self.lib.hipo_has_bank_( #TODO: Figure out how to see if bank exists in current event.
-            ctypes.c_char_p(bankName.encode('ascii')),
-            ctypes.c_int(len(bankName))
-        )
+        return self.dictionary.hasSchema(bankName)
 
     def show(self):
         """
@@ -475,7 +485,7 @@ class hipofile:
         -----------
         Print out all available bank names in open file.
         """
-        self.lib.hipo_show_banks_()
+        print(self.dictionary)
     
     def showBank(self,bankName):
         """
@@ -487,10 +497,7 @@ class hipofile:
         -----------
         Print out bank contents for current event.
         """
-        self.lib.hipo_show_bank_(
-            ctypes.c_char_p(bankName.encode('ascii')),
-            ctypes.c_int(len(bankName))
-        )
+        print(self.dictionary.getSchema(bankName))
 
     def getBanks(self):
         """
@@ -499,9 +506,7 @@ class hipofile:
         list
             list of all bank names in the reader dictionary
         """
-        hipo_get_banks_ = self.lib.hipo_get_banks_
-        hipo_get_banks_.restype = ctypes.c_char_p
-        return hipo_get_banks_().decode('ascii').split(" ")
+        return self.dictionary.getSchemaList()
 
     def readAllBanks(self):
         """
@@ -509,7 +514,10 @@ class hipofile:
         -----------
         Read all existing banks to event for appending to file.
         """
-        self.lib.hipo_read_all_banks_()
+        for schema in self.dictionary.getSchemaList():
+            bank = hipopybind.Bank(self.dictionary.getSchema(schema))
+            self.event.getStructure(bank)
+
 
     def readBank(self,bankName,verbose=False):
         """
@@ -523,11 +531,9 @@ class hipofile:
         -----------
         Setup to read bank contents for each event into memory.
         """
-        self.lib.hipo_read_bank_(
-            ctypes.c_char_p(bankName.encode('ascii')),
-            ctypes.c_int(len(bankName)),
-            verbose
-        )
+        if self.dictionary.hasSchema(bankName):
+            bank = hipopybind.Bank(self.dictionary.getSchema(bankName))
+            self.event.getStructure(bank)
 
     def getGroup(self):
         """
@@ -535,7 +541,14 @@ class hipofile:
         -----------
         Get highest number group of all existing schema in reader for initiating file in append mode.
         """
-        return self.lib.hipo_get_group() #TODO:
+        # Set group number to highest so far
+        group = 0
+        for schema in self.dictionary.getSchemaList():
+            g = self.dictionary.getSchema(schema).getGroup()
+            if group < g: group = g
+        self.group = group
+        return self.group
+
 
     def getEntries(self,bankName):
         """
@@ -548,11 +561,7 @@ class hipofile:
         Get number of entries in bank.  Make sure you read bank first 
         with readBank(bankName) method above.
         """
-
-        return self.lib.hipo_get_bank_entries_(
-            ctypes.c_char_p(bankName.encode('ascii')),
-            ctypes.c_int(len(bankName))
-        )
+        return self.dictionary.getSchema(bankName).getEntries()
 
     def getNamesAndTypes(self,bankName):
         """
@@ -569,13 +578,7 @@ class hipofile:
         -----------
         Get a list of the entry names from the data table in the current event's bank.
         """
-
-        hipo_get_bank_entries_names_types_ = self.lib.hipo_get_bank_entries_names_types_
-        hipo_get_bank_entries_names_types_.restype = ctypes.c_char_p
-        bankdict = hipo_get_bank_entries_names_types_(
-            ctypes.c_char_p(bankName.encode('ascii')),
-            ctypes.c_int(len(bankName))
-        ).decode('ascii')
+        bankdict = self.dictionary.getSchema(bankName).getSchemaString()
         bankdict = bankdict.split("}{")[1][:-1]
         bankdict = { entry.split("/")[0]:entry.split("/")[1] for entry in bankdict.split(",")}
         return bankdict
@@ -595,15 +598,9 @@ class hipofile:
         -----------
         Get a list of the entry names from the data table in the current event's bank.
         """
-
-        hipo_get_bank_entries_names_ = self.lib.hipo_get_bank_entries_names_
-        hipo_get_bank_entries_names_.restype = ctypes.c_char_p
-        return hipo_get_bank_entries_names_(
-            ctypes.c_char_p(bankName.encode('ascii')),
-            ctypes.c_int(len(bankName)),
-        ).decode('ascii').split(' ')
-
-        # return [data[i].decode('ascii') for i in range(nEntries)]
+        schema   = self.dictionary.getSchema(bankName)
+        nEntries = schema.getEntries()
+        return [schema.getEntryName(i) for i in range(nEntries)]
 
     def getTypes(self,bankName):
         """
@@ -619,16 +616,10 @@ class hipofile:
         -----------
         Get a list of the entry types from the data table in the current event's bank.
         """
-
-        nEntries = self.getEntries(bankName)
-        data = (ctypes.c_char_p * nEntries)()
-        self.lib.hipo_get_bank_entries_types_(
-            ctypes.c_char_p(bankName.encode('ascii')),
-            ctypes.c_int(len(bankName)),
-            data
-        )
-
-        return [data[i].decode('ascii') for i in range(nEntries)]
+        dtypes = {1:"B", 2:"S", 3:"I", 4:"F", 5:"D", 8:"L" }
+        schema   = self.dictionary.getSchema(bankName)
+        nEntries = schema.getEntries()
+        return [dtypes[schema.getEntryType(i)] for i in range(nEntries)]
 
     def getRows(self,bankName):
         """
@@ -641,10 +632,9 @@ class hipofile:
         Get number of rows in bank.  Make sure you read bank first 
         with readBank(bankName) method above.
         """
-        return self.lib.hipo_get_bank_rows_(
-            ctypes.c_char_p(bankName.encode('ascii')),
-            ctypes.c_int(len(bankName))
-        )
+        bank = hipopybind.Bank(self.dictionary.getSchema(bankName))
+        self.event.getStructure(bank)
+        return bank.getRows()
 
     def getInts(self,bankName,item):
         """
@@ -663,15 +653,10 @@ class hipofile:
         -----------
         Get a column of ints from the data table in the current event's bank.
         """
-        bankRows = self.getRows(bankName)
-        data = (ctypes.c_int * bankRows)()
-        self.lib.hipo_get_ints(
-            ctypes.c_char_p(bankName.encode('ascii')),
-            ctypes.c_int(len(bankName)),
-            ctypes.c_char_p(item.encode('ascii')),
-            ctypes.c_int(len(item)),
-            data
-        )
+        bank = hipopybind.Bank(self.dictionary.getSchema(bankName))
+        self.event.getStructure(bank)
+        bankRows = bank.getRows()
+        data = [bank.getInt(item,i) for i in range(bankRows)]
         return data
 
     def getFloats(self,bankName,item):
@@ -691,15 +676,10 @@ class hipofile:
         -----------
         Get a column of floats from the data table in the current event's bank.
         """
-        bankRows = self.getRows(bankName)
-        data = (ctypes.c_float * bankRows)()
-        self.lib.hipo_get_floats(
-            ctypes.c_char_p(bankName.encode('ascii')),
-            ctypes.c_int(len(bankName)),
-            ctypes.c_char_p(item.encode('ascii')),
-            ctypes.c_int(len(item)),
-            data
-        )
+        bank = hipopybind.Bank(self.dictionary.getSchema(bankName))
+        self.event.getStructure(bank)
+        bankRows = bank.getRows()
+        data = [bank.getFloat(item,i) for i in range(bankRows)]
         return data
 
     def getDoubles(self,bankName,item):
@@ -719,16 +699,12 @@ class hipofile:
         -----------
         Get a column of doubles from the data table in the current event's bank.
         """
-        bankRows = self.getRows(bankName)
-        data = (ctypes.c_double * bankRows)()
-        self.lib.hipo_get_doubles(
-            ctypes.c_char_p(bankName.encode('ascii')),
-            ctypes.c_int(len(bankName)),
-            ctypes.c_char_p(item.encode('ascii')),
-            ctypes.c_int(len(item)),
-            data
-        )
+        bank = hipopybind.Bank(self.dictionary.getSchema(bankName))
+        self.event.getStructure(bank)
+        bankRows = bank.getRows()
+        data = [bank.getDouble(item,i) for i in range(bankRows)]
         return data
+
 
     def getShorts(self,bankName,item):
         """
@@ -747,16 +723,12 @@ class hipofile:
         -----------
         Get a column of shorts from the data table in the current event's bank.
         """
-        bankRows = self.getRows(bankName)
-        data = (ctypes.c_short * bankRows)()
-        self.lib.hipo_get_shorts(
-            ctypes.c_char_p(bankName.encode('ascii')),
-            ctypes.c_int(len(bankName)),
-            ctypes.c_char_p(item.encode('ascii')),
-            ctypes.c_int(len(item)),
-            data
-        )
+        bank = hipopybind.Bank(self.dictionary.getSchema(bankName))
+        self.event.getStructure(bank)
+        bankRows = bank.getRows()
+        data = [bank.getShort(item,i) for i in range(bankRows)]
         return data
+
 
     def getLongs(self,bankName,item):
         """
@@ -775,16 +747,12 @@ class hipofile:
         -----------
         Get a column of longs from the data table in the current event's bank.
         """
-        bankRows = self.getRows(bankName)
-        data = (ctypes.c_long * bankRows)()
-        self.lib.hipo_get_longs(
-            ctypes.c_char_p(bankName.encode('ascii')),
-            ctypes.c_int(len(bankName)),
-            ctypes.c_char_p(item.encode('ascii')),
-            ctypes.c_int(len(item)),
-            data
-        )
+        bank = hipopybind.Bank(self.dictionary.getSchema(bankName))
+        self.event.getStructure(bank)
+        bankRows = bank.getRows()
+        data = [bank.getLong(item,i) for i in range(bankRows)]
         return data
+
 
     def getBytes(self,bankName,item):
         """
@@ -803,16 +771,12 @@ class hipofile:
         -----------
         Get a column of bytes from the data table in the current event's bank.
         """
-        bankRows = self.getRows(bankName)
-        data = (ctypes.c_long * bankRows)()
-        self.lib.hipo_get_bytes(
-            ctypes.c_char_p(bankName.encode('ascii')),
-            ctypes.c_int(len(bankName)),
-            ctypes.c_char_p(item.encode('ascii')),
-            ctypes.c_int(len(item)),
-            data
-        )
+        bank = hipopybind.Bank(self.dictionary.getSchema(bankName))
+        self.event.getStructure(bank)
+        bankRows = bank.getRows()
+        data = [bank.getByte(item,i) for i in range(bankRows)]
         return data
+
 
     def __iter__(self):
         return hipofileIterator(self)
@@ -951,7 +915,7 @@ class hipochainIterator:
         # Open file
         self.idx += 1 #NOTE: Do this before everything below since we initiate at -1.
         if (self.idx>=len(self.chain.names)): return #NOTE: Sanity check
-        self.file = hipofile(self.chain.names[self.idx],LIBFILENAME,mode=self.chain.mode)
+        self.file = hipofile(self.chain.names[self.idx],mode=self.chain.mode)
         self.file.open()
         
         if self.chain.banks is None: self.chain.banks = self.file.getBanks() #NOTE: This assumes all the files in the chain have the same banks.
