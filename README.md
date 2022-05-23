@@ -4,14 +4,18 @@
 
 To install from source:
 ```bash
-git --recurse-submodules clone https://github.com/mfmceneaney/hipopy.git
-cd hipopy
-cd hipo; cd lz4; make CFLAGS=-fPIC; cd ..; cmake .; make; cd ..
+git clone https://github.com/mfmceneaney/hipopy.git
 ```
+
 Then add to following to your startup script:
 ```bash
 export PYTHONPATH=$PYTHONPATH:/path/to/hipopy
 ```
+You will also need to install the project dependencies:
+* [numpy](https://numpy.org)
+* [awkward](https://awkward-array.readthedocs.io/en/latest/)
+* [hipopybind](https://github.com/mfmceneaney/hipopybind.git)
+(All available with pip.)
 
 To install with pip:
 ```bash
