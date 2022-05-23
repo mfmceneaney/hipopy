@@ -93,13 +93,6 @@ To write a new hipofile use the ``hipopy.hipopy.create`` function.
 
 Extending Files
 ---------------
-.. note::
-   This will not currently work if you already 
-   have a ``hipopy.hipopy.create()`` file open because of shared library issues.
-
-.. note::
-   Currently all entry types in appended (and written banks) must be the same too.
-
 To append banks to events in an existing file you must specify the type
 
 >>> filename = "out.hipo" # Recreate this in your $PWD
