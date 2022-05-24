@@ -8,7 +8,6 @@ import numpy.ma as ma
 import awkward as ak
 import hipopy.hipopy as hippy
 
-# TODO: Relocate this to some other functions for iterating input files like uproot
 if __name__=="__main__":
 
     # Appending banks to existing file
