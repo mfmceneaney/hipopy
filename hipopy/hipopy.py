@@ -1,7 +1,6 @@
 #----------------------------------------------------------------------#
 # Python interface for reading HIPO files.
-# Authors: G.Gavalian (2019, Jefferson Lab),
-#          M. McEneaney (2022, Duke University)
+# Authors: M. McEneaney (2022, Duke University)
 #----------------------------------------------------------------------#
 
 import os
