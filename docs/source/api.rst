@@ -4,4 +4,13 @@ API
 .. autosummary::
    :toctree: generated
 
-   module
+   hipopy
+
+Hipopy
+------
+
+.. automodule:: hipopy
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
