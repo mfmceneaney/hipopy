@@ -1,7 +1,7 @@
 API
 ===
 
-.. automodule:: hipopy.hipopy
+.. automodule:: hipopy
     :members:
     :undoc-members:
     :show-inheritance:

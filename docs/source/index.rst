@@ -23,3 +23,19 @@ Contents
    start
    examples
    api
+
+Indices and tables
+------------------
+
+ * :ref:`genindex`
+ * :ref:`modindex`
+ * :ref:`search`
+
+API
+---
+
+.. automodule:: hipopy
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
