@@ -32,13 +32,13 @@ simply loop through events using the `hipofile` get methods
 to access the data.
 
 >>> import hipopy.hipopy
->>> f = hipopy.hipopy.open('file.hipo',mode='r')
->>> f.show()
+>>> file = hipopy.hipopy.open('file.hipo',mode='r')
+>>> file.show()
                NEW::bank :     1     1     3
->>> f.readBank('NEW::bank')
->>> f.showBank('NEW::bank')
+>>> file.readBank('NEW::bank')
+>>> file.showBank('NEW::bank')
 {NEW::bank/1/1}{px/D,py/D,pz/D}
->>> f.getNamesAndTypes('NEW::bank')
+>>> file.getNamesAndTypes('NEW::bank')
 {'px': 'D', 'py': 'D', 'pz': 'D'}
 >>> for event in file:
 >>>        data = file.getDoubles('NEW::bank','px')
@@ -68,7 +68,7 @@ To write a new hipofile use the ``hipopy.hipopy.create`` function.
 >>> import numpy as np
 >>> import hipopy.hipopy as hipopy
 >>>
->>> f = hipopy.hipopy.create('new.hipo')
+>>> filename = 'new.hipo'
 >>> bank     = "NEW::bank"
 >>> dtype    = "D" #NOTE: For now all the bank entries have to have the same type.
 >>> names    = ["px","py","pz"]
