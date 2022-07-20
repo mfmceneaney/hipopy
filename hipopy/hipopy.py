@@ -577,9 +577,14 @@ class hipofile:
         -----------
         Get a list of the entry names from the data table in the current event's bank.
         """
-        bankdict = self.dictionary.getSchema(bankName).getSchemaString()
-        bankdict = bankdict.split("}{")[1][:-1]
-        bankdict = { entry.split("/")[0]:entry.split("/")[1] for entry in bankdict.split(",")}
+        bankdict = None
+        try:
+            bankdict = self.dictionary.getSchema(bankName).getSchemaString()
+            bankdict = bankdict.split("}{")[1][:-1]
+            bankdict = { entry.split("/")[0]:entry.split("/")[1] for entry in bankdict.split(",")}
+        except IndexError:
+            print("hipopy.hipopy.hipofile.getNamesAndTypes schemaString unreadable")
+            print("schemaString = ",bankdict)
         return bankdict
     
     def getNames(self,bankName):
@@ -956,7 +961,7 @@ class hipochainIterator:
 
                         # Add bank data to batch dictionary
                         if not bank+"_"+item in self.dict.keys() : self.dict[bank+"_"+item] = [np.array(data)]
-                        else: self.dict[bank+"_"+item].append(np.array(data))               
+                        else: self.dict[bank+"_"+item].append(np.array(data))#TODO: Remove np.array and just use list or awkward arrays somehow???             
 
                 # Check size of output array
                 self.counter += 1
