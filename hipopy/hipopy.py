@@ -584,7 +584,7 @@ class hipofile:
             bankdict = { entry.split("/")[0]:entry.split("/")[1] for entry in bankdict.split(",")}
         except IndexError:
             print("hipopy.hipopy.hipofile.getNamesAndTypes schemaString unreadable")
-            print("schemaString = ",bankdict)
+            print("schemaString = ",self.dictionary.getSchema(bankName).getSchemaString())
         return bankdict
     
     def getNames(self,bankName):
