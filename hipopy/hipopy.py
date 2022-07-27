@@ -586,6 +586,7 @@ class hipofile:
             print("hipopy.hipopy.hipofile.getNamesAndTypes schemaString unreadable")
             print("bankName = ",bankName)
             print("schemaString = ",self.dictionary.getSchema(bankName).getSchemaString())
+            return None
         return bankdict
     
     def getNames(self,bankName):
@@ -921,7 +922,6 @@ class hipochainIterator:
         self.idx += 1 #NOTE: Do this before everything below since we initiate at -1.
         if (self.idx>=len(self.chain.names)): return #NOTE: Sanity check
         self.file = hipofile(self.chain.names[self.idx],mode=self.chain.mode)
-        print("DEBUGGING: opening file: ",self.chain.names[self.idx])#DEBUGGING
         self.file.open()
         
         if self.chain.banks is None: self.chain.banks = self.file.getBanks() #NOTE: This assumes all the files in the chain have the same banks.
