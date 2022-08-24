@@ -53,7 +53,6 @@ def iterate(files,banks=None,step=100):
     f = hipochain(files,banks,step=step)
     return f
 
-
 def create(filename):
     """
     Parameters
@@ -113,6 +112,8 @@ class hipofile:
         Extension for buffer file
     buffname : string
         Name of buffer file
+    banklist : dict
+        Dictionary to hipopybind.Bank objects
     """
 
     # Methods
@@ -513,8 +514,6 @@ class hipofile:
         """
         return self.dictionary.getSchemaList()
 
-        
-
     def readAllBanks(self):
         """
         Description
@@ -524,7 +523,6 @@ class hipofile:
         for schema in self.dictionary.getSchemaList():
             bank = hipopybind.Bank(self.dictionary.getSchema(schema))
             self.event.getStructure(bank)
-
 
     def readBank(self,bankName,verbose=False):
         """
@@ -556,7 +554,6 @@ class hipofile:
         self.group = group
         return self.group
 
-
     def getEntries(self,bankName):
         """
         Parameters
@@ -578,8 +575,8 @@ class hipofile:
 
         Returns
         -------
-        data : ctypes.c_char_p array
-            ctypes c_char_p array containing the bank entries
+        data : dict
+            Dictionary of bank entry names to types (represented as strings)
 
         Description
         -----------
@@ -605,8 +602,8 @@ class hipofile:
 
         Returns
         -------
-        data : ctypes c_char_p array
-            ctypes c_char_p array containing the bank entries 
+        data : list
+            List of entry names in bank
 
         Description
         -----------
@@ -624,7 +621,8 @@ class hipofile:
 
         Returns
         -------
-        data : ctypes c_char_p array containing the bank entries 
+        data : list
+            List of entry types (represented as strings) in bank
 
         Description
         -----------
@@ -656,12 +654,12 @@ class hipofile:
         ----------
         bankName : string, required
         item : string, required
-            Column name you wish to read in bank
+            Column name to read in bank
 
         Returns
         -------
-        data : ctypes int array
-            ctypes int array containing the bank entries 
+        data : list
+            List of ints from bank entry
 
         Description
         -----------
@@ -679,12 +677,12 @@ class hipofile:
         ----------
         bankName : string, required
         item : string, required
-            Column name you wish to read in bank
+            Column name to read in bank
 
         Returns
         -------
-        data : cyptes float array
-            ctypes float array containing the bank entries
+        data : list
+            List of floats from bank entry
 
         Description
         -----------
@@ -702,12 +700,12 @@ class hipofile:
         ----------
         bankName : string, required
         item : string, required
-            Column name you wish to read in bank
+            Column name to read in bank
 
         Returns
         -------
-        data : ctypes double array
-            ctypes double array containing the bank entries
+        data : list
+            List of doubles from bank entry
 
         Description
         -----------
@@ -719,19 +717,18 @@ class hipofile:
         data = [bank.getDouble(item,i) for i in range(bankRows)]
         return data
 
-
     def getShorts(self,bankName,item):
         """
         Parameters
         ----------
         bankName : string, required
         item : string, required
-            Column name you wish to read in bank
+            Column name to read in bank
 
         Returns
         -------
-        data : ctypes short array
-            ctypes short array containing the bank entries
+        data : list
+            List of shorts from bank entry
 
         Description
         -----------
@@ -743,19 +740,18 @@ class hipofile:
         data = [bank.getShort(item,i) for i in range(bankRows)]
         return data
 
-
     def getLongs(self,bankName,item):
         """
         Parameters
         ----------
         bankName : string, required
         item : string, required
-            Column name you wish to read in bank
+            Column name to read in bank
 
         Returns
         -------
-        data : ctypes long array
-            ctypes long array containing the bank entries
+        data : list
+            List of longs from bank entry
 
         Description
         -----------
@@ -767,19 +763,18 @@ class hipofile:
         data = [bank.getLong(item,i) for i in range(bankRows)]
         return data
 
-
     def getBytes(self,bankName,item):
         """
         Parameters
         ----------
         bankName : string, required
         item : string, required
-            Column name you wish to read in bank
+            Column name to read in bank
 
         Returns
         -------
-        data : ctypes c_int array
-            ctypes c_int array containing the bank entries
+        data : list
+            List of bytes from bank entry
 
         Description
         -----------
@@ -790,7 +785,6 @@ class hipofile:
         bankRows = bank.getRows()
         data = [bank.getByte(item,i) for i in range(bankRows)]
         return data
-
 
     def __iter__(self):
         return hipofileIterator(self)
