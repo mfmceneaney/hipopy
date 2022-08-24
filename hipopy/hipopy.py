@@ -169,6 +169,7 @@ class hipofile:
         self.dtypes     = {}
         self.buffext    = "~"
         self.buffname   = None
+        self.banklist   = {}
         
     def open(self):
         """
@@ -207,6 +208,11 @@ class hipofile:
         elif self.mode=="a" and self.buffname is not None:
             # Now open with writer after adding schema to write
             self.writer.open(self.buffname)
+
+        # Create banks now for speed
+        _dictionary = self.dictionary if self.mode=='r' else self.writer.getDictionary()
+        for schema in _dictionary.getSchemaList():
+            self.banklist[schema] = hipopybind.Bank(_dictionary.getSchema(schema))
             
     def flush(self):
         """
@@ -327,7 +333,7 @@ class hipofile:
         Write all existing banks to event for appending to file.
         """
         for schema in self.writer.getDictionary().getSchemaList():
-            bank = hipopybind.Bank(self.writer.getDictionary().getSchema(schema))
+            bank = self.banklist[schema]
             self.event.getStructure(bank)
             self.event.addStructure(bank)
 
@@ -349,9 +355,9 @@ class hipofile:
         -----------
         Fill an event bank with data and write to buffer.
         """
-        schema = self.writer.getDictionary().getSchema(name)
         rows   = np.shape(data)[-1]
-        bank   = hipopybind.Bank(schema,rows)
+        bank   = self.banklist[name]
+        bank.setRows(rows)
 
         # Add data to bank
         for idx, entry in enumerate(names):
@@ -359,12 +365,12 @@ class hipofile:
             if dtype=="D":
                 for i in range(rows):
                     bank.putDouble(entry,i,data[idx,i])
-            elif dtype=="F":
-                for i in range(rows):
-                    bank.putFloat(entry,i,data[idx,i])
             elif dtype=="I":
                 for i in range(rows):
                     bank.putInt(entry,i,data[idx,i])
+            elif dtype=="F":
+                for i in range(rows):
+                    bank.putFloat(entry,i,data[idx,i])
             elif dtype=="B":
                 for i in range(rows):
                     bank.putByte(entry,i,data[idx,i])
@@ -414,7 +420,7 @@ class hipofile:
         Description
         -----------
         Mimics uproot extend function. NOTE: dtype argument fixed until I figure out how to pass
-        different types to C wrapper.
+        different types to C wrapper.#TODO: REMOVE
         """
         keys = list(datadict.keys())
         nEvents = len(datadict[keys[0]])
@@ -600,7 +606,7 @@ class hipofile:
         Returns
         -------
         data : ctypes c_char_p array
-            ctypes c_char_p array containing the bank entries
+            ctypes c_char_p array containing the bank entries 
 
         Description
         -----------
@@ -618,7 +624,7 @@ class hipofile:
 
         Returns
         -------
-        data : ctypes c_char_p array containing the bank entries
+        data : ctypes c_char_p array containing the bank entries 
 
         Description
         -----------
@@ -640,7 +646,7 @@ class hipofile:
         Get number of rows in bank.  Make sure you read bank first 
         with readBank(bankName) method above.
         """
-        bank = hipopybind.Bank(self.dictionary.getSchema(bankName))
+        bank = self.banklist[bankName]#hipopybind.Bank(self.dictionary.getSchema(bankName)) #NOTE: DEBUGGING COMMENTED OUT
         self.event.getStructure(bank)
         return bank.getRows()
 
@@ -655,13 +661,13 @@ class hipofile:
         Returns
         -------
         data : ctypes int array
-            ctypes int array containing the bank entries
+            ctypes int array containing the bank entries 
 
         Description
         -----------
         Get a column of ints from the data table in the current event's bank.
         """
-        bank = hipopybind.Bank(self.dictionary.getSchema(bankName))
+        bank = self.banklist[bankName]
         self.event.getStructure(bank)
         bankRows = bank.getRows()
         data = [bank.getInt(item,i) for i in range(bankRows)]
@@ -684,7 +690,7 @@ class hipofile:
         -----------
         Get a column of floats from the data table in the current event's bank.
         """
-        bank = hipopybind.Bank(self.dictionary.getSchema(bankName))
+        bank = self.banklist[bankName]
         self.event.getStructure(bank)
         bankRows = bank.getRows()
         data = [bank.getFloat(item,i) for i in range(bankRows)]
@@ -707,7 +713,7 @@ class hipofile:
         -----------
         Get a column of doubles from the data table in the current event's bank.
         """
-        bank = hipopybind.Bank(self.dictionary.getSchema(bankName))
+        bank = self.banklist[bankName]
         self.event.getStructure(bank)
         bankRows = bank.getRows()
         data = [bank.getDouble(item,i) for i in range(bankRows)]
@@ -731,7 +737,7 @@ class hipofile:
         -----------
         Get a column of shorts from the data table in the current event's bank.
         """
-        bank = hipopybind.Bank(self.dictionary.getSchema(bankName))
+        bank = self.banklist[bankName]
         self.event.getStructure(bank)
         bankRows = bank.getRows()
         data = [bank.getShort(item,i) for i in range(bankRows)]
@@ -755,7 +761,7 @@ class hipofile:
         -----------
         Get a column of longs from the data table in the current event's bank.
         """
-        bank = hipopybind.Bank(self.dictionary.getSchema(bankName))
+        bank = self.banklist[bankName]
         self.event.getStructure(bank)
         bankRows = bank.getRows()
         data = [bank.getLong(item,i) for i in range(bankRows)]
@@ -779,7 +785,7 @@ class hipofile:
         -----------
         Get a column of bytes from the data table in the current event's bank.
         """
-        bank = hipopybind.Bank(self.dictionary.getSchema(bankName))
+        bank = self.banklist[bankName]
         self.event.getStructure(bank)
         bankRows = bank.getRows()
         data = [bank.getByte(item,i) for i in range(bankRows)]
@@ -822,15 +828,15 @@ class hipofileIterator:
             for bank in self.banks:
                 for item in self.items[bank]:
                     data = []
-                    if   self.items[bank][item]=="F": data = self.hipofile.getFloats(bank,item)
+                    if   self.items[bank][item]=="D": data = self.hipofile.getDoubles(bank,item)
                     elif self.items[bank][item]=="I": data = self.hipofile.getInts(bank,item)
-                    elif self.items[bank][item]=="D": data = self.hipofile.getDoubles(bank,item)
+                    elif self.items[bank][item]=="F": data = self.hipofile.getFloats(bank,item)
                     elif self.items[bank][item]=="L": data = self.hipofile.getLongs(bank,item)
                     elif self.items[bank][item]=="S": data = self.hipofile.getShorts(bank,item)
                     elif self.items[bank][item]=="B": data = self.hipofile.getBytes(bank,item)
 
                     # Add bank data to event dictionary
-                    event[bank+"_"+item] = [np.array(data)]
+                    event[bank+"_"+item] = [data]
 
             return event
         raise StopIteration
@@ -956,16 +962,16 @@ class hipochainIterator:
                 for bank in self.chain.banks:
                     for item in self.items[bank]:
                         data = []
-                        if   self.items[bank][item]=="F": data = self.file.getFloats(bank,item)
+                        if   self.items[bank][item]=="D": data = self.file.getDoubles(bank,item)
                         elif self.items[bank][item]=="I": data = self.file.getInts(bank,item)
-                        elif self.items[bank][item]=="D": data = self.file.getDoubles(bank,item)
+                        elif self.items[bank][item]=="F": data = self.file.getFloats(bank,item)
                         elif self.items[bank][item]=="L": data = self.file.getLongs(bank,item)
                         elif self.items[bank][item]=="S": data = self.file.getShorts(bank,item)
                         elif self.items[bank][item]=="B": data = self.file.getBytes(bank,item)
 
                         # Add bank data to batch dictionary
-                        if not bank+"_"+item in self.dict.keys() : self.dict[bank+"_"+item] = [np.array(data)]
-                        else: self.dict[bank+"_"+item].append(np.array(data))#TODO: Remove np.array and just use list or awkward arrays somehow???             
+                        if not bank+"_"+item in self.dict.keys() : self.dict[bank+"_"+item] = [data]
+                        else: self.dict[bank+"_"+item].append(data)            
 
                 # Check size of output array
                 self.counter += 1
