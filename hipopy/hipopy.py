@@ -662,8 +662,7 @@ class hipofile:
         Get a column of ints from the data table in the current event's bank.
         """
         bank = self.banklist[bankName]
-        bankRows = bank.getRows()
-        data = [bank.getInt(item,i) for i in range(bankRows)]
+        data = bank.getInts(item)
         return data
 
     def getFloats(self,bankName,item):
@@ -684,8 +683,7 @@ class hipofile:
         Get a column of floats from the data table in the current event's bank.
         """
         bank = self.banklist[bankName]
-        bankRows = bank.getRows()
-        data = [bank.getFloat(item,i) for i in range(bankRows)]
+        data = bank.getFloats(item)
         return data
 
     def getDoubles(self,bankName,item):
@@ -706,8 +704,7 @@ class hipofile:
         Get a column of doubles from the data table in the current event's bank.
         """
         bank = self.banklist[bankName]
-        bankRows = bank.getRows()
-        data = [bank.getDouble(item,i) for i in range(bankRows)]  #TODO: ADDED
+        data = bank.getDoubles(item)
         return data
 
     def getShorts(self,bankName,item):
@@ -728,8 +725,7 @@ class hipofile:
         Get a column of shorts from the data table in the current event's bank.
         """
         bank = self.banklist[bankName]
-        bankRows = bank.getRows()
-        data = [bank.getShort(item,i) for i in range(bankRows)]
+        data = bank.getShorts(item)
         return data
 
     def getLongs(self,bankName,item):
@@ -750,8 +746,7 @@ class hipofile:
         Get a column of longs from the data table in the current event's bank.
         """
         bank = self.banklist[bankName]
-        bankRows = bank.getRows()
-        data = [bank.getLong(item,i) for i in range(bankRows)]
+        data = bank.getLongs(item)
         return data
 
     def getBytes(self,bankName,item):
@@ -772,8 +767,7 @@ class hipofile:
         Get a column of bytes from the data table in the current event's bank.
         """
         bank = self.banklist[bankName]
-        bankRows = bank.getRows()
-        data = [bank.getByte(item,i) for i in range(bankRows)]
+        data = bank.getBytes(item)
         return data
 
     def __iter__(self):
