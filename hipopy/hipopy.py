@@ -358,6 +358,7 @@ class hipofile:
         """
         rows   = np.shape(data)[-1]
         bank   = self.banklist[name]
+        bank.reset()
         bank.setRows(rows)
 
         # Add data to bank
@@ -431,8 +432,9 @@ class hipofile:
             for event in range(nEvents):
                 for bank in datadict: # This requires datadict shape to be (nEvents,nNames,nRows)
                     self.writeBank(bank,list(self.dtypes[bank].keys()),datadict[bank][event],dtypes=list(self.dtypes[bank].values()))
-                self.addEvent()
-            self.writeEvent()
+                self.writer.addEvent(self.event)
+                self.event.reset()
+            # self.writer.flush()
 
         # Append mode routine
         elif self.mode == "a":
@@ -442,8 +444,9 @@ class hipofile:
                     break
                 for bank in datadict: # This requires datadict shape to be (nEvents,nNames,nRows)
                     self.writeBank(bank,self.dtypes[bank].keys(),datadict[bank][event],dtypes=list(self.dtypes[bank].values()))
-                self.addEvent()
-            self.writeEvent()
+                self.writer.addEvent(self.event)
+                self.event.reset()
+            # self.writer.flush()
 
     def update(self,datadict):
         """
@@ -462,8 +465,9 @@ class hipofile:
         if self.mode == "a":
             for bank in datadict: # This requires datadict shape to be (nNames,nRows)
                 self.writeBank(bank,self.dtypes[bank].keys(),datadict[bank],dtypes=list(self.dtypes[bank].values()))
-            self.addEvent()
-            self.writeEvent()
+            self.writer.addEvent(self.event)
+            self.event.reset()
+            # self.writer.flush()
 
     def write(self):
         """
@@ -712,9 +716,9 @@ class hipofile:
         Get a column of doubles from the data table in the current event's bank.
         """
         bank = self.banklist[bankName]
-        self.event.getStructure(bank)
+        # self.event.getStructure(bank)
         bankRows = bank.getRows()
-        data = [bank.getDouble(item,i) for i in range(bankRows)]
+        data = [bank.getDouble(item,i) for i in range(bankRows)]  #TODO: ADDED
         return data
 
     def getShorts(self,bankName,item):
