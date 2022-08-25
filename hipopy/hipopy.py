@@ -331,7 +331,6 @@ class hipofile:
         """
         for schema in self.writer.getDictionary().getSchemaList():
             bank = self.banklist[schema]
-            self.event.getStructure(bank)
             self.event.addStructure(bank)
 
     def writeBank(self, name, names, data, dtypes="D"):
@@ -642,8 +641,7 @@ class hipofile:
         Get number of rows in bank.  Make sure you read bank first 
         with readBank(bankName) method above.
         """
-        bank = self.banklist[bankName]#hipopybind.Bank(self.dictionary.getSchema(bankName)) #NOTE: DEBUGGING COMMENTED OUT
-        self.event.getStructure(bank)
+        bank = self.banklist[bankName]
         return bank.getRows()
 
     def getInts(self,bankName,item):
@@ -664,7 +662,6 @@ class hipofile:
         Get a column of ints from the data table in the current event's bank.
         """
         bank = self.banklist[bankName]
-        self.event.getStructure(bank)
         bankRows = bank.getRows()
         data = [bank.getInt(item,i) for i in range(bankRows)]
         return data
@@ -687,7 +684,6 @@ class hipofile:
         Get a column of floats from the data table in the current event's bank.
         """
         bank = self.banklist[bankName]
-        self.event.getStructure(bank)
         bankRows = bank.getRows()
         data = [bank.getFloat(item,i) for i in range(bankRows)]
         return data
@@ -710,7 +706,6 @@ class hipofile:
         Get a column of doubles from the data table in the current event's bank.
         """
         bank = self.banklist[bankName]
-        # self.event.getStructure(bank)
         bankRows = bank.getRows()
         data = [bank.getDouble(item,i) for i in range(bankRows)]  #TODO: ADDED
         return data
@@ -733,7 +728,6 @@ class hipofile:
         Get a column of shorts from the data table in the current event's bank.
         """
         bank = self.banklist[bankName]
-        self.event.getStructure(bank)
         bankRows = bank.getRows()
         data = [bank.getShort(item,i) for i in range(bankRows)]
         return data
@@ -756,7 +750,6 @@ class hipofile:
         Get a column of longs from the data table in the current event's bank.
         """
         bank = self.banklist[bankName]
-        self.event.getStructure(bank)
         bankRows = bank.getRows()
         data = [bank.getLong(item,i) for i in range(bankRows)]
         return data
@@ -779,7 +772,6 @@ class hipofile:
         Get a column of bytes from the data table in the current event's bank.
         """
         bank = self.banklist[bankName]
-        self.event.getStructure(bank)
         bankRows = bank.getRows()
         data = [bank.getByte(item,i) for i in range(bankRows)]
         return data
