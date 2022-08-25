@@ -400,7 +400,7 @@ class hipofile:
 
         Description
         -----------
-        Mimics uproot newTree function.
+        Create a new bank to which to add data.  Mimics uproot newtree function.
         """
         group = self.group if group is None else group
         item  = self.item if item is None else item
