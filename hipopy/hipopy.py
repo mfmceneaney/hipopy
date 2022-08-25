@@ -422,17 +422,6 @@ class hipofile:
         keys = list(datadict.keys())
         nEvents = len(datadict[keys[0]])
 
-        #DEBUGGING BEGIN
-        print("self.writer = ",self.writer)
-        print("self.banklist = ")
-        for b in self.banklist:
-            print(b)
-        print("self.event = ",self.event)
-        print("self.writer.getDictionary() = ",self.writer.getDictionary())
-        print("self.writer.getDictionary().getSchemaList() = ",self.writer.getDictionary().getSchemaList())
-        #DEBUGGING END
-
-
         # Write mode routine
         if self.mode == "w":
             for event in range(nEvents):
