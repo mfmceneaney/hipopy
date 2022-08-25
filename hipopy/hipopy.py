@@ -189,11 +189,6 @@ class hipofile:
             self.reader.open(self.filename)
             self.reader.readDictionary(self.dictionary)
 
-            # Read all existing banks
-            for schema in self.dictionary.getSchemaList():
-                bank = hipopybind.Bank(self.dictionary.getSchema(schema))
-                self.event.getStructure(bank)
-
             # Set group number to highest so far
             self.group = 0
             for schema in self.dictionary.getSchemaList():
@@ -214,6 +209,7 @@ class hipofile:
         _dictionary = self.dictionary if self.mode=='r' else self.writer.getDictionary()
         for schema in _dictionary.getSchemaList():
             self.banklist[schema] = hipopybind.Bank(_dictionary.getSchema(schema))
+            self.event.getStructure(self.banklist[schema]) #NOTE: IMPORTANT! Necessary before reading banks into event with addStructure.
             
     def flush(self):
         """
@@ -421,11 +417,21 @@ class hipofile:
 
         Description
         -----------
-        Mimics uproot extend function. NOTE: dtype argument fixed until I figure out how to pass
-        different types to C wrapper.#TODO: REMOVE
+        Add batched data to banks in a file.  Mimics uproot extend function.
         """
         keys = list(datadict.keys())
         nEvents = len(datadict[keys[0]])
+
+        #DEBUGGING BEGIN
+        print("self.writer = ",self.writer)
+        print("self.banklist = ")
+        for b in self.banklist:
+            print(b)
+        print("self.event = ",self.event)
+        print("self.writer.getDictionary() = ",self.writer.getDictionary())
+        print("self.writer.getDictionary().getSchemaList() = ",self.writer.getDictionary().getSchemaList())
+        #DEBUGGING END
+
 
         # Write mode routine
         if self.mode == "w":
@@ -434,7 +440,7 @@ class hipofile:
                     self.writeBank(bank,list(self.dtypes[bank].keys()),datadict[bank][event],dtypes=list(self.dtypes[bank].values()))
                 self.writer.addEvent(self.event)
                 self.event.reset()
-            # self.writer.flush()
+            self.writer.flush()
 
         # Append mode routine
         elif self.mode == "a":
@@ -446,7 +452,7 @@ class hipofile:
                     self.writeBank(bank,self.dtypes[bank].keys(),datadict[bank][event],dtypes=list(self.dtypes[bank].values()))
                 self.writer.addEvent(self.event)
                 self.event.reset()
-            # self.writer.flush()
+            self.writer.flush()
 
     def update(self,datadict):
         """
@@ -458,8 +464,7 @@ class hipofile:
         Description
         -----------
         Append one set of event banks at a time and do not progress to the 
-        next event automatically. NOTE: dtype argument fixed until I figure out how to pass
-        different types to C wrapper.
+        next event automatically.
         """
         # Append mode routine
         if self.mode == "a":
@@ -467,7 +472,7 @@ class hipofile:
                 self.writeBank(bank,self.dtypes[bank].keys(),datadict[bank],dtypes=list(self.dtypes[bank].values()))
             self.writer.addEvent(self.event)
             self.event.reset()
-            # self.writer.flush()
+            self.writer.flush()
 
     def write(self):
         """
