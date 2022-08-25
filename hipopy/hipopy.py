@@ -360,23 +360,17 @@ class hipofile:
         for idx, entry in enumerate(names):
             dtype = dtypes if len(dtypes)==1 else dtypes[idx]
             if dtype=="D":
-                for i in range(rows):
-                    bank.putDouble(entry,i,data[idx,i])
+                bank.putDoubles(entry,data[idx])
             elif dtype=="I":
-                for i in range(rows):
-                    bank.putInt(entry,i,data[idx,i])
+                bank.putInts(entry,data[idx])
             elif dtype=="F":
-                for i in range(rows):
-                    bank.putFloat(entry,i,data[idx,i])
+                bank.putFloats(entry,data[idx])
             elif dtype=="B":
-                for i in range(rows):
-                    bank.putByte(entry,i,data[idx,i])
+                bank.putBytes(entry,data[idx])
             elif dtype=="S":
-                for i in range(rows):
-                    bank.putShort(entry,i,data[idx,i])
+                bank.putShorts(entry,data[idx])
             elif dtype=="L":
-                for i in range(rows):
-                    bank.putLong(entry,i,data[idx,i])
+                bank.putLongs(entry,data[idx])
             else:
                 raise TypeError
 
