@@ -22,3 +22,9 @@ Contents
    start
    examples
    api
+
+.. autosummary::
+   :toctree: _autosummary
+   :recursive:
+
+   hipopy
