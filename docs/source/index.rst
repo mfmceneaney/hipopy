@@ -23,6 +23,9 @@ Contents
    examples
    api
 
+Summary
+-------
+
 .. autosummary::
    :toctree: _autosummary
    :recursive:
