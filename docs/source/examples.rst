@@ -4,7 +4,7 @@ Examples
 .. _examples:
 
 Opening a HIPO File
-----------------
+-------------------
 
 To open a single HIPO file use the
 ``hipopy.hipopy.open`` function.
