@@ -7,9 +7,7 @@ Opening a HIPO File
 ----------------
 
 To open a single HIPO file use the
-``hipopy.hipopy.open`` function:
-
-.. autofunction:: hipopy.hipopy.open
+``hipopy.hipopy.open`` function.
 
 The ``mode`` parameter should be either ``"r"``, ``"w"``,
 or ``"a"`` (read, write, and append).
