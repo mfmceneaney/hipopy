@@ -1,7 +1,10 @@
 API
 ===
 
-.. autosummary::
-   :toctree: generated
+.. note:: 
+    Page under development
 
-   hipopy
+.. automodule:: hipopy
+    :members:
+    :undoc-members:
+    :show-inheritance:
