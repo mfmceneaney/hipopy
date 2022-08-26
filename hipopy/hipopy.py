@@ -798,6 +798,7 @@ class hipofileIterator:
 
             # Get bank data
             for bank in self.banks:
+                self.hipofile.event.getStructure(self.hipofile.banklist[bank])#NOTE: NECESSARY OR YOU WILL NOT READ ANY DATA!
                 for item in self.items[bank]:
                     data = []
                     if   self.items[bank][item]=="D": data = self.hipofile.getDoubles(bank,item)
@@ -932,6 +933,7 @@ class hipochainIterator:
 
                 # Get bank data
                 for bank in self.chain.banks:
+                    self.file.event.getStructure(self.file.banklist[bank])#NOTE: NECESSARY OR YOU WILL NOT READ ANY DATA!
                     for item in self.items[bank]:
                         data = []
                         if   self.items[bank][item]=="D": data = self.file.getDoubles(bank,item)
