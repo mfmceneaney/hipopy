@@ -4,7 +4,7 @@ import os
 import sys
 
 # -- Add source files for autodoc
-sys.path.insert(0, os.path.abspath('../../hipopy/'))
+sys.path.insert(0, os.path.abspath('../../hipopy/*.py'))
 
 # -- Project information
 
