@@ -90,15 +90,13 @@ class hipofile:
     ----------
     filename : string
         Full path name of HIPO file
-    libpath : string
-        Path to shared library file
     mode : string
         File mode ("r" : read, "a" : append, "w" : write)
     reader : hipopybind.Reader
         HIPO file reader
     writer : hipopybind.Writer
         HIPO file writer
-    dict : hipopybind.Dictionary
+    dictionary : hipopybind.Dictionary
         HIPO file schema dictionary
     event : hipopybind.Event
         HIPO event for reading and writing banks
