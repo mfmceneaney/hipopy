@@ -22,12 +22,3 @@ Contents
    start
    examples
    api
-
-Summary
--------
-
-.. autosummary::
-   :toctree: _autosummary
-   :recursive:
-
-   hipopy
