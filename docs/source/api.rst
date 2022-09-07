@@ -4,7 +4,7 @@ API
 .. note:: 
     Page under development
 
-.. automodule:: hipopy
+.. automodule:: hipopy.hipopy
     :members:
     :undoc-members:
     :show-inheritance:
