@@ -943,7 +943,7 @@ class hipochainIterator:
 
                         # Add bank data to batch dictionary
                         if not bank+"_"+item in self.dict.keys() : self.dict[bank+"_"+item] = [data]
-                        else: self.dict[bank+"_"+item].append(data)            
+                        else: self.dict[bank+"_"+item].append(data)
 
                 # Check size of output array
                 self.counter += 1
@@ -956,7 +956,7 @@ class hipochainIterator:
             self.switchFile()
 
         # Final return for remainder
-        if self.dict != None:
+        if self.dict != None and len(self.dict.keys())>0:
             res       = self.dict
             self.dict = None
             return res #TODO: Will this return last remainder that is not necessarily stepsize?
