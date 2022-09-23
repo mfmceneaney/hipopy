@@ -13,7 +13,7 @@ copyright = '2022, Matthew McEneaney'
 author = 'Matthew McEneaney'
 
 release = '1.2'
-version = '1.2.1'
+version = '1.2.2'
 
 # -- General configuration
 
