@@ -799,12 +799,13 @@ class hipofileIterator:
                 self.hipofile.event.getStructure(self.hipofile.banklist[bank])#NOTE: NECESSARY OR YOU WILL NOT READ ANY DATA!
                 for item in self.items[bank]:
                     data = []
-                    if   self.items[bank][item]=="D": data = self.hipofile.getDoubles(bank,item)
-                    elif self.items[bank][item]=="I": data = self.hipofile.getInts(bank,item)
-                    elif self.items[bank][item]=="F": data = self.hipofile.getFloats(bank,item)
-                    elif self.items[bank][item]=="L": data = self.hipofile.getLongs(bank,item)
-                    elif self.items[bank][item]=="S": data = self.hipofile.getShorts(bank,item)
-                    elif self.items[bank][item]=="B": data = self.hipofile.getBytes(bank,item)
+                    item_type = self.items[bank][item]
+                    if   item_type=="D": data = self.hipofile.getDoubles(bank,item)
+                    elif item_type=="I": data = self.hipofile.getInts(bank,item)
+                    elif item_type=="F": data = self.hipofile.getFloats(bank,item)
+                    elif item_type=="L": data = self.hipofile.getLongs(bank,item)
+                    elif item_type=="S": data = self.hipofile.getShorts(bank,item)
+                    elif item_type=="B": data = self.hipofile.getBytes(bank,item)
 
                     # Add bank data to event dictionary
                     event[bank+"_"+item] = [data]
@@ -885,6 +886,7 @@ class hipochainIterator:
 
     def __init__(self,chain):
         self.chain   = chain
+        self.nnames  = len(self.chain.names) #NOTE: Assumes this will stay constant.
         self.idx     = -1
         self.counter = 0
         self.file    = None
@@ -899,7 +901,7 @@ class hipochainIterator:
         """
         # Open file
         self.idx += 1 #NOTE: Do this before everything below since we initiate at -1.
-        if (self.idx>=len(self.chain.names)): return #NOTE: Sanity check
+        if self.idx>=self.nnames: return #NOTE: Sanity check
         self.file = hipofile(self.chain.names[self.idx],mode=self.chain.mode)
         self.file.open()
         
@@ -920,7 +922,7 @@ class hipochainIterator:
 
         if self.idx == -1: self.switchFile() # Load first file manually
 
-        if self.idx<(len(self.chain.names)): #TODO: Check this condition. #TODO: TIME: SET THIS AS A CONSTANT INSTEAD OF CALLING LEN() OVER AND OVER
+        if self.idx<(self.nnames): #TODO: Check this condition. #TODO: TIME: SET THIS AS A CONSTANT INSTEAD OF CALLING LEN() OVER AND OVER
 
             # Check if output array has been initialized
             if self.dict is None:
@@ -934,12 +936,13 @@ class hipochainIterator:
                     self.file.event.getStructure(self.file.banklist[bank])#NOTE: NECESSARY OR YOU WILL NOT READ ANY DATA! #NOTE: TIME WHY IS THIS NECESSARY HERE???
                     for item in self.items[bank]:
                         data = []
-                        if   self.items[bank][item]=="D": data = self.file.getDoubles(bank,item)
-                        elif self.items[bank][item]=="I": data = self.file.getInts(bank,item)
-                        elif self.items[bank][item]=="F": data = self.file.getFloats(bank,item)
-                        elif self.items[bank][item]=="L": data = self.file.getLongs(bank,item)
-                        elif self.items[bank][item]=="S": data = self.file.getShorts(bank,item)
-                        elif self.items[bank][item]=="B": data = self.file.getBytes(bank,item)
+                        item_type = self.items[bank][item]
+                        if   item_type=="D": data = self.file.getDoubles(bank,item)
+                        elif item_type=="I": data = self.file.getInts(bank,item)
+                        elif item_type=="F": data = self.file.getFloats(bank,item)
+                        elif item_type=="L": data = self.file.getLongs(bank,item)
+                        elif item_type=="S": data = self.file.getShorts(bank,item)
+                        elif item_type=="B": data = self.file.getBytes(bank,item)
 
                         # Add bank data to batch dictionary
                         if not bank+"_"+item in self.dict.keys() : self.dict[bank+"_"+item] = [data] #NOTE: TIME COULD JUST USE IN and drop .keys()... DEBUGGING USE BOOLEAN FLAG HERE INSTEAD...
