@@ -920,7 +920,7 @@ class hipochainIterator:
 
         if self.idx == -1: self.switchFile() # Load first file manually
 
-        if self.idx<(len(self.chain.names)): #TODO: Check this condition.
+        if self.idx<(len(self.chain.names)): #TODO: Check this condition. #TODO: TIME: SET THIS AS A CONSTANT INSTEAD OF CALLING LEN() OVER AND OVER
 
             # Check if output array has been initialized
             if self.dict is None:
@@ -931,7 +931,7 @@ class hipochainIterator:
 
                 # Get bank data
                 for bank in self.chain.banks:
-                    self.file.event.getStructure(self.file.banklist[bank])#NOTE: NECESSARY OR YOU WILL NOT READ ANY DATA!
+                    self.file.event.getStructure(self.file.banklist[bank])#NOTE: NECESSARY OR YOU WILL NOT READ ANY DATA! #NOTE: TIME WHY IS THIS NECESSARY HERE???
                     for item in self.items[bank]:
                         data = []
                         if   self.items[bank][item]=="D": data = self.file.getDoubles(bank,item)
@@ -942,7 +942,7 @@ class hipochainIterator:
                         elif self.items[bank][item]=="B": data = self.file.getBytes(bank,item)
 
                         # Add bank data to batch dictionary
-                        if not bank+"_"+item in self.dict.keys() : self.dict[bank+"_"+item] = [data]
+                        if not bank+"_"+item in self.dict.keys() : self.dict[bank+"_"+item] = [data] #NOTE: TIME COULD JUST USE IN and drop .keys()... DEBUGGING USE BOOLEAN FLAG HERE INSTEAD...
                         else: self.dict[bank+"_"+item].append(data)
 
                 # Check size of output array
