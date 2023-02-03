@@ -945,7 +945,7 @@ class hipochainIterator:
                         elif item_type=="B": data = self.file.getBytes(bank,item)
 
                         # Add bank data to batch dictionary
-                        if not bank+"_"+item in self.dict.keys() : self.dict[bank+"_"+item] = [data] #NOTE: TIME COULD JUST USE IN and drop .keys()... DEBUGGING USE BOOLEAN FLAG HERE INSTEAD...
+                        if not bank+"_"+item in self.dict: self.dict[bank+"_"+item] = [data] #NOTE: TIME COULD JUST USE IN and drop .keys()... DEBUGGING USE BOOLEAN FLAG HERE INSTEAD...
                         else: self.dict[bank+"_"+item].append(data)
 
                 # Check size of output array
