@@ -147,7 +147,7 @@ class hipofile:
     # getShorts
     # getLongs
 
-    def __init__(self,filename,mode="r"):
+    def __init__(self,filename,mode="r",tags=None):
         """
         Parameters
         ----------
@@ -169,6 +169,7 @@ class hipofile:
         self.buffext    = "~"
         self.buffname   = None
         self.banklist   = {}
+        self.tags       = tags
         
     def open(self):
         """
@@ -177,6 +178,7 @@ class hipofile:
         Open a HIPO file to read, write (from scratch), or append data.
         IMPORTANT:  Make sure you add schema before opening a file to write!
         """
+        if self.tags is not None: self.reader.setTags(self.tags)
         if self.mode=="r":
             self.reader.open(self.filename)
             self.reader.readDictionary(self.dictionary)
@@ -834,7 +836,7 @@ class hipochain:
     Chains files together so they may be read continuously.
     """
 
-    def __init__(self,names,banks=None,step=100,mode="r"):
+    def __init__(self,names,banks=None,step=100,mode="r",tags=None):
         self.names   = names
 
         # Parse regex NOTE: Must be full or relative path from $PWD.  ~/... does not work.
@@ -853,6 +855,7 @@ class hipochain:
         self.step    = step
         self.mode    = "r"   #TODO: Does it make sense to just fix this?
         self.verbose = False #TODO: Do we really need this?
+        self.tags    = tags
 
     def __iter__(self):
         return hipochainIterator(self)
@@ -902,7 +905,7 @@ class hipochainIterator:
         # Open file
         self.idx += 1 #NOTE: Do this before everything below since we initiate at -1.
         if self.idx>=self.nnames: return #NOTE: Sanity check
-        self.file = hipofile(self.chain.names[self.idx],mode=self.chain.mode)
+        self.file = hipofile(self.chain.names[self.idx],mode=self.chain.mode,tags=self.chain.tags)
         self.file.open()
         
         if self.chain.banks is None: self.chain.banks = self.file.getBanks() #NOTE: This assumes all the files in the chain have the same banks.
