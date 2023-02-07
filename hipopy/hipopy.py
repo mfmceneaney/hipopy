@@ -15,7 +15,7 @@ import hipopybind
 #----------------------------------------------------------------------#
 # Basic  I/O behaviors
 
-def open(filename,mode="r"):
+def open(filename,mode="r",tags=None):
     """
     Parameters
     ----------
@@ -23,12 +23,16 @@ def open(filename,mode="r"):
     mode : string, optional
         File mode ("r" : read, "w" : write, "a" : append)
         Default : "r"
+    tags : int or list of ints, optional
+        Set bank tags for reader to use.  0 works for most banks.
+        1 is needed for scaler banks.
+        Default : None
 
     Description
     -----------
     Open a HIPO file to read.
     """
-    f = hipofile(filename,mode=mode)
+    f = hipofile(filename,mode=mode,tags=tags)
     f.open()
     return f
 
@@ -41,9 +45,13 @@ def iterate(files,banks=None,step=100,tags=None):
     banks : list, optional
         List of bank names to read
         Default : None
-    step : int
+    step : int, optional
         Batch size for iterating through file events
         Default : 100
+    tags : int or list of ints, optional
+        Set bank tags for reader to use.  0 works for most banks.
+        1 is needed for scaler banks.
+        Default : None
 
     Description
     -----------
@@ -178,8 +186,9 @@ class hipofile:
         Open a HIPO file to read, write (from scratch), or append data.
         IMPORTANT:  Make sure you add schema before opening a file to write!
         """
-        if self.tags is not None: self.reader.setTags(self.tags)
+
         if self.mode=="r":
+            if self.tags is not None: self.reader.setTags(self.tags) #NOTE: Only set tags for files to read since not yet tested for writing files.
             self.reader.open(self.filename)
             self.reader.readDictionary(self.dictionary)
         elif self.mode=="w": self.writer.open(self.filename)
@@ -830,6 +839,9 @@ class hipochain:
         Currently fixed to always be in read mode ("r")
     verbose : boolean
         Currently fixed to always be False
+    tags : int or list of ints
+        Set bank tags for reader to use.  0 works for most banks.
+        1 is needed for scaler banks.
 
     Description
     -----------
