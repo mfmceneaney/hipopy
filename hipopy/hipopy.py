@@ -32,7 +32,7 @@ def open(filename,mode="r"):
     f.open()
     return f
 
-def iterate(files,banks=None,step=100):
+def iterate(files,banks=None,step=100,tags=None):
     """
     Parameters
     ----------
@@ -50,7 +50,7 @@ def iterate(files,banks=None,step=100):
     Iterate through a list of hipofiles reading all banks unless specific banks are specified.
     Iteration is broken into batches of step events.
     """
-    f = hipochain(files,banks,step=step)
+    f = hipochain(files,banks,step=step,tags=tags)
     return f
 
 def create(filename):
