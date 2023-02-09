@@ -912,6 +912,8 @@ class hipochainIterator:
         self.file    = None
         self.items   = {}
         self.dict    = None
+        self.experimental = True
+        self.hbHipoFileIterator = hb.HipoFileIterator(self.chain.names,self.chain.banks,self.chain.step) #NOTE: EXPERIMENTAL
 
     def switchFile(self):
         """
@@ -939,6 +941,26 @@ class hipochainIterator:
         -----------
         Loops files reading requested banks if they exist 
         """
+
+        if self.experimental:
+
+            has_events = self.hbHipoFileIterator.next(0)
+            # if not has_events: raise StopIteration
+            banknames = self.hbHipoFileIterator.banknames
+            items = self.hbHipoFileIterator.items
+            types = self.hbHipoFileIterator.types
+            datadict = {}
+            for bankname, idx in enumerate(banknames):
+                for item, idx2 in enumerate(items[idx]):
+                item_type = types[idx][idx2]
+                if item_type==5: datadict[bankname] = self.hb.hbHipoFileIterator.getDoubles(bankname,item)
+                if item_type==4: datadict[bankname] = self.hb.hbHipoFileIterator.getFloats(bankname,item)
+                if item_type==3: datadict[bankname] = self.hb.hbHipoFileIterator.getInts(bankname,item)
+                if item_type==8: datadict[bankname] = self.hb.hbHipoFileIterator.getLongs(bankname,item)
+                if item_type==2: datadict[bankname] = self.hb.hbHipoFileIterator.getShorts(bankname,item)
+                if item_type==1: datadict[bankname] = self.hb.hbHipoFileIterator.getBytes(bankname,item)
+            #NOTE: COULD ADD GLOBAL VARIABLE SET TO SIGNAL STOP_ITERATION ON NEXT __NEXT__ CALL.
+            return res
 
         if self.idx == -1: self.switchFile() # Load first file manually
 
