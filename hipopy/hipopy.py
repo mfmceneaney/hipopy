@@ -913,7 +913,7 @@ class hipochainIterator:
         self.items   = {}
         self.dict    = None
         self.experimental = True
-        self.hbHipoFileIterator = hb.HipoFileIterator(self.chain.names,self.chain.banks,self.chain.step) #NOTE: EXPERIMENTAL
+        self.hbHipoFileIterator = hipopybind.HipoFileIterator(self.chain.names,self.chain.banks,self.chain.step) #NOTE: EXPERIMENTAL
 
     def switchFile(self):
         """
@@ -953,12 +953,12 @@ class hipochainIterator:
             for bankname, idx in enumerate(banknames):
                 for item, idx2 in enumerate(items[idx]):
                     item_type = types[idx][idx2]
-                    if item_type==5: datadict[bankname] = self.hb.hbHipoFileIterator.getDoubles(bankname,item)
-                    if item_type==4: datadict[bankname] = self.hb.hbHipoFileIterator.getFloats(bankname,item)
-                    if item_type==3: datadict[bankname] = self.hb.hbHipoFileIterator.getInts(bankname,item)
-                    if item_type==8: datadict[bankname] = self.hb.hbHipoFileIterator.getLongs(bankname,item)
-                    if item_type==2: datadict[bankname] = self.hb.hbHipoFileIterator.getShorts(bankname,item)
-                    if item_type==1: datadict[bankname] = self.hb.hbHipoFileIterator.getBytes(bankname,item)
+                    if item_type==5: datadict[bankname] = self.hbHipoFileIterator.getDoubles(bankname,item)
+                    if item_type==4: datadict[bankname] = self.hbHipoFileIterator.getFloats(bankname,item)
+                    if item_type==3: datadict[bankname] = self.hbHipoFileIterator.getInts(bankname,item)
+                    if item_type==8: datadict[bankname] = self.hbHipoFileIterator.getLongs(bankname,item)
+                    if item_type==2: datadict[bankname] = self.hbHipoFileIterator.getShorts(bankname,item)
+                    if item_type==1: datadict[bankname] = self.hbHipoFileIterator.getBytes(bankname,item)
             #NOTE: COULD ADD GLOBAL VARIABLE SET TO SIGNAL STOP_ITERATION ON NEXT __NEXT__ CALL.
             return res
 
