@@ -950,8 +950,8 @@ class hipochainIterator:
             items = self.hbHipoFileIterator.items
             types = self.hbHipoFileIterator.types
             datadict = {}
-            for bankname, idx in enumerate(banknames):
-                for item, idx2 in enumerate(items[idx]):
+            for idx, bankname in enumerate(banknames):
+                for idx2, item in enumerate(items[idx]):
                     item_type = types[idx][idx2]
                     if item_type==5: datadict[bankname] = self.hbHipoFileIterator.getDoubles(bankname,item)
                     if item_type==4: datadict[bankname] = self.hbHipoFileIterator.getFloats(bankname,item)
