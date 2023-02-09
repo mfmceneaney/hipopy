@@ -944,7 +944,7 @@ class hipochainIterator:
 
         if self.experimental:
 
-            has_events = self.hbHipoFileIterator.next(0)
+            has_events = self.hbHipoFileIterator.next(0) #NOTE: ADD CHECK ON INDEX AND THEN DO NEXT BELOW...?
             # if not has_events: raise StopIteration
             banknames = self.hbHipoFileIterator.banknames
             items = self.hbHipoFileIterator.items
@@ -960,7 +960,12 @@ class hipochainIterator:
                     if item_type==2: datadict[bankname] = self.hbHipoFileIterator.getShorts(bankname,item)
                     if item_type==1: datadict[bankname] = self.hbHipoFileIterator.getBytes(bankname,item)
             #NOTE: COULD ADD GLOBAL VARIABLE SET TO SIGNAL STOP_ITERATION ON NEXT __NEXT__ CALL.
+
+            #NOTE: TODO: SET FLAG FOR THIS IF BLOCK TO FALSE IF has_events is False THEN PUT STOP_ITERATION BELOW
+            self.experimental = has_events
             return datadict
+        raise StopIteration
+        
 
         if self.idx == -1: self.switchFile() # Load first file manually
 
