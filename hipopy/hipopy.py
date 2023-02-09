@@ -188,7 +188,12 @@ class hipofile:
         """
 
         if self.mode=="r":
-            if self.tags is not None: self.reader.setTags(self.tags) #NOTE: Only set tags for files to read since not yet tested for writing files.
+            if self.tags is not None:
+                if type(self.tags)==int:
+                    self.reader.setTags(self.tags) #NOTE: Only set tags for files to read since not yet tested for writing files.
+                else:
+                    for tag in self.tags:
+                        self.reader.setTags(tag)
             self.reader.open(self.filename)
             self.reader.readDictionary(self.dictionary)
         elif self.mode=="w": self.writer.open(self.filename)
