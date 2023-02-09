@@ -946,23 +946,23 @@ class hipochainIterator:
 
             has_events = self.hbHipoFileIterator.next(0) #NOTE: ADD CHECK ON INDEX AND THEN DO NEXT BELOW...?
             # if not has_events: raise StopIteration
-            banknames = self.hbHipoFileIterator.banknames
-            items = self.hbHipoFileIterator.items
-            types = self.hbHipoFileIterator.types
+            # banknames = self.hbHipoFileIterator.banknames
+            # items = self.hbHipoFileIterator.items
+            # types = self.hbHipoFileIterator.types
             datadict = {}
-            for idx, bankname in enumerate(banknames):
-                for idx2, item in enumerate(items[idx]):
-                    item_type = types[idx][idx2]
-                    if item_type==5: datadict[bankname] = self.hbHipoFileIterator.getDoubles(bankname,item)
-                    if item_type==4: datadict[bankname] = self.hbHipoFileIterator.getFloats(bankname,item)
-                    if item_type==3: datadict[bankname] = self.hbHipoFileIterator.getInts(bankname,item)
-                    if item_type==8: datadict[bankname] = self.hbHipoFileIterator.getLongs(bankname,item)
-                    if item_type==2: datadict[bankname] = self.hbHipoFileIterator.getShorts(bankname,item)
-                    if item_type==1: datadict[bankname] = self.hbHipoFileIterator.getBytes(bankname,item)
-            #NOTE: COULD ADD GLOBAL VARIABLE SET TO SIGNAL STOP_ITERATION ON NEXT __NEXT__ CALL.
+            # for idx, bankname in enumerate(banknames):
+            #     for idx2, item in enumerate(items[idx]):
+            #         item_type = types[idx][idx2]
+            #         if item_type==5: datadict[bankname] = self.hbHipoFileIterator.getDoubles(bankname,item)
+            #         if item_type==4: datadict[bankname] = self.hbHipoFileIterator.getFloats(bankname,item)
+            #         if item_type==3: datadict[bankname] = self.hbHipoFileIterator.getInts(bankname,item)
+            #         if item_type==8: datadict[bankname] = self.hbHipoFileIterator.getLongs(bankname,item)
+            #         if item_type==2: datadict[bankname] = self.hbHipoFileIterator.getShorts(bankname,item)
+            #         if item_type==1: datadict[bankname] = self.hbHipoFileIterator.getBytes(bankname,item)
+            # #NOTE: COULD ADD GLOBAL VARIABLE SET TO SIGNAL STOP_ITERATION ON NEXT __NEXT__ CALL.
 
-            #NOTE: TODO: SET FLAG FOR THIS IF BLOCK TO FALSE IF has_events is False THEN PUT STOP_ITERATION BELOW
-            self.experimental = has_events
+            # #NOTE: TODO: SET FLAG FOR THIS IF BLOCK TO FALSE IF has_events is False THEN PUT STOP_ITERATION BELOW
+            # self.experimental = has_events
             return datadict
         raise StopIteration
         
