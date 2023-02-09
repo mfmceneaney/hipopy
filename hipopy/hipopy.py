@@ -960,7 +960,7 @@ class hipochainIterator:
                     if item_type==2: datadict[bankname] = self.hbHipoFileIterator.getShorts(bankname,item)
                     if item_type==1: datadict[bankname] = self.hbHipoFileIterator.getBytes(bankname,item)
             #NOTE: COULD ADD GLOBAL VARIABLE SET TO SIGNAL STOP_ITERATION ON NEXT __NEXT__ CALL.
-            return res
+            return datadict
 
         if self.idx == -1: self.switchFile() # Load first file manually
 
