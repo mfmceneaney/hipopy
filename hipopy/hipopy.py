@@ -913,7 +913,8 @@ class hipochainIterator:
         self.items   = {}
         self.dict    = None
         self.experimental = True
-        self.hbHipoFileIterator = hipopybind.HipoFileIterator(self.chain.names,self.chain.banks,self.chain.step) #NOTE: EXPERIMENTAL
+        self.tags = [0,1] #NOTE: EXPERIMENTAL
+        self.hbHipoFileIterator = hipopybind.HipoFileIterator(self.chain.names,self.chain.banks,self.chain.step,self.tags) #NOTE: EXPERIMENTAL
 
     def switchFile(self):
         """
@@ -944,7 +945,7 @@ class hipochainIterator:
 
         if self.experimental:
 
-            has_events = self.hbHipoFileIterator.next(0) #NOTE: ADD CHECK ON INDEX AND THEN DO NEXT BELOW...?
+            has_events = self.hbHipoFileIterator.__next__() #NOTE: ADD CHECK ON INDEX AND THEN DO NEXT BELOW...?
             # if not has_events: raise StopIteration
             # banknames = self.hbHipoFileIterator.banknames
             # items = self.hbHipoFileIterator.items
@@ -964,7 +965,10 @@ class hipochainIterator:
             # #NOTE: TODO: SET FLAG FOR THIS IF BLOCK TO FALSE IF has_events is False THEN PUT STOP_ITERATION BELOW
             # self.experimental = has_events
             return datadict
-        raise StopIteration
+
+        print("DEBUGGING: I SHOULD NOT MAKE IT HERE self.experimental = ",self.experimental) #DEBUGGING
+        return {}
+        # raise StopIteration
         
 
         if self.idx == -1: self.switchFile() # Load first file manually
