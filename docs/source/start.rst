@@ -24,8 +24,9 @@ Installation
 
 To install with pip:
 
-.. code-block:: console
-   $ pip install hipopy
+.. code-block:: sh
+   pip install hipopy
+   ...
 
 Or you can install from source following the 
 directions on the `GitHub page <https://github.com/mfmceneaney/hipopy.git>`_.
