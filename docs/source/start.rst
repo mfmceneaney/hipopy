@@ -12,6 +12,7 @@ Prerequisites
 - Ninja or Pip 10+
 
 You will also need to install the project dependencies:
+
 - `numpy <https://numpy.org>`_
 - `awkward <https://awkward-array.readthedocs.io/en/latest/>`_
 - `hipopybind <https://github.com/mfmceneaney/hipopybind.git>`_
