@@ -18,7 +18,7 @@ For example:
 >>> f = hipopy.hipopy.open('file.hipo',mode='r')
 >>> f.show()
                NEW::bank :     1     1     3
->>> f.read('NEW::bank')
+>>> f.readBank('NEW::bank')
 
 Reading a Single File
 ---------------------
