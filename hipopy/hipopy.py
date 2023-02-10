@@ -1052,17 +1052,13 @@ class hipochainIteratorExperimental:
         self.nnames  = len(self.chain.names) #NOTE: Assumes this will stay constant.
         self.idx     = -1
         self.file    = None
-        if self.chain.banks is None: self.chain.banks = self.getAllBankNames()
+        if self.chain.banks is None: self.getAllBankNames()
         self.has_events = True
         self.hbHipoFileIterator = hipopybind.HipoFileIterator(self.chain.names,self.chain.banks,self.chain.step,self.chain.tags)
         self.banknames = self.hbHipoFileIterator.banknames
         self.items = self.hbHipoFileIterator.items
         self.types = self.hbHipoFileIterator.types
-
-        print("DEBUGGING: self.banknames = ",self.banknames)#DEBUGGING
-        print("DEBUGGING: self.items = ",self.items)#DEBUGGING
-        print("DEBUGGING: self.types = ",self.types)#DEBUGGING
-        print("DEBUGGING: self.chain.names = ",self.chain.names)#DEBUGGING
+        self.batch_counter = 0
 
     def getAllBankNames(self):
         """
@@ -1086,8 +1082,9 @@ class hipochainIteratorExperimental:
         """
 
         if self.has_events:
-            self.has_events = self.hbHipoFileIterator.__next__()
-            print("DEBUGGING: self.has_events = ",self.has_events)
+            if self.batch_counter==0:
+                self.has_events = self.hbHipoFileIterator.__next__()
+            self.batch_counter += 1
             datadict = {}
             for idx, bankname in enumerate(self.banknames):
                 for idx2, item in enumerate(self.items[idx]):
@@ -1098,5 +1095,6 @@ class hipochainIteratorExperimental:
                     elif item_type==8: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getLongs(bankname,item)
                     elif item_type==2: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getShorts(bankname,item)
                     elif item_type==1: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getBytes(bankname,item)
+            self.has_events = self.hbHipoFileIterator.__next__() #NOTE: IMPORTANT THIS SHOULD BE FILLING THE DICTIONARY SO self.has_events IS SET CORRECTLY FOR THE NEXT CALL.
             return datadict
         raise StopIteration
