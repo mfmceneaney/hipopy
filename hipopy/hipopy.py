@@ -36,7 +36,7 @@ def open(filename,mode="r",tags=None):
     f.open()
     return f
 
-def iterate(files,banks=None,step=100,tags=None):
+def iterate(files,banks=None,step=100,tags=None,experimental=False):
     """
     Parameters
     ----------
@@ -52,13 +52,17 @@ def iterate(files,banks=None,step=100,tags=None):
         Set bank tags for reader to use.  0 works for most banks.
         1 is needed for scaler banks.
         Default : None
+    experimental : bool, optional
+        Whether to use experimental hipopybind.HipoFileIterator to iterate files
+        Default : False
 
     Description
     -----------
     Iterate through a list of hipofiles reading all banks unless specific banks are specified.
     Iteration is broken into batches of step events.
     """
-    f = hipochain(files,banks,step=step,tags=tags)
+    if tags is None and experimental: tags = []
+    f = hipochain(files,banks,step=step,tags=tags,experimental=experimental)
     return f
 
 def create(filename):
@@ -853,7 +857,7 @@ class hipochain:
     Chains files together so they may be read continuously.
     """
 
-    def __init__(self,names,banks=None,step=100,mode="r",tags=None):
+    def __init__(self,names,banks=None,step=100,mode="r",tags=None,experimental=False):
         self.names   = names
 
         # Parse regex NOTE: Must be full or relative path from $PWD.  ~/... does not work.
@@ -873,9 +877,10 @@ class hipochain:
         self.mode    = "r"   #TODO: Does it make sense to just fix this?
         self.verbose = False #TODO: Do we really need this?
         self.tags    = tags
+        self.experimental = experimental
 
     def __iter__(self):
-        return hipochainIterator(self)
+        return hipochainIterator(self) if not self.experimental else hipochainIteratorExperimental(self)
 
 class hipochainIterator:
 
@@ -912,9 +917,12 @@ class hipochainIterator:
         self.file    = None
         self.items   = {}
         self.dict    = None
-        self.experimental = True
-        self.tags = [0,1] #NOTE: EXPERIMENTAL
-        self.hbHipoFileIterator = hipopybind.HipoFileIterator(self.chain.names,self.chain.banks,self.chain.step,self.tags) #NOTE: EXPERIMENTAL
+        # self.experimental = True
+        # self.tags = [0,1] #NOTE: EXPERIMENTAL
+        # if self.experimental and self.chain.banks is None: self.switchFile()
+        # if self.experimental:
+        #     self.reached_end = False
+        #     self.hbHipoFileIterator = hipopybind.HipoFileIterator(self.chain.names,self.chain.banks,self.chain.step,self.tags) #NOTE: EXPERIMENTAL
 
     def switchFile(self):
         """
@@ -943,31 +951,25 @@ class hipochainIterator:
         Loops files reading requested banks if they exist 
         """
 
-        if self.experimental:
+        # if self.experimental:
 
-            has_events = self.hbHipoFileIterator.__next__() #NOTE: ADD CHECK ON INDEX AND THEN DO NEXT BELOW...?
-            # if not has_events: raise StopIteration
-            # banknames = self.hbHipoFileIterator.banknames
-            # items = self.hbHipoFileIterator.items
-            # types = self.hbHipoFileIterator.types
-            datadict = {}
-            # for idx, bankname in enumerate(banknames):
-            #     for idx2, item in enumerate(items[idx]):
-            #         item_type = types[idx][idx2]
-            #         if item_type==5: datadict[bankname] = self.hbHipoFileIterator.getDoubles(bankname,item)
-            #         if item_type==4: datadict[bankname] = self.hbHipoFileIterator.getFloats(bankname,item)
-            #         if item_type==3: datadict[bankname] = self.hbHipoFileIterator.getInts(bankname,item)
-            #         if item_type==8: datadict[bankname] = self.hbHipoFileIterator.getLongs(bankname,item)
-            #         if item_type==2: datadict[bankname] = self.hbHipoFileIterator.getShorts(bankname,item)
-            #         if item_type==1: datadict[bankname] = self.hbHipoFileIterator.getBytes(bankname,item)
-            # #NOTE: COULD ADD GLOBAL VARIABLE SET TO SIGNAL STOP_ITERATION ON NEXT __NEXT__ CALL.
+        #     has_events = self.hbHipoFileIterator.__next__()
+        #     banknames = self.hbHipoFileIterator.banknames
+        #     items = self.hbHipoFileIterator.items
+        #     types = self.hbHipoFileIterator.types
+        #     datadict = {}
+        #     for idx, bankname in enumerate(banknames):
+        #         for idx2, item in enumerate(items[idx]):
+        #             item_type = types[idx][idx2]
+        #             if item_type==5: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getDoubles(bankname,item)
+        #             elif item_type==4: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getFloats(bankname,item)
+        #             elif item_type==3: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getInts(bankname,item)
+        #             elif item_type==8: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getLongs(bankname,item)
+        #             elif item_type==2: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getShorts(bankname,item)
+        #             elif item_type==1: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getBytes(bankname,item)
 
-            # #NOTE: TODO: SET FLAG FOR THIS IF BLOCK TO FALSE IF has_events is False THEN PUT STOP_ITERATION BELOW
-            # self.experimental = has_events
-            return datadict
-
-        print("DEBUGGING: I SHOULD NOT MAKE IT HERE self.experimental = ",self.experimental) #DEBUGGING
-        return {}
+        #     self.experimental = has_events
+        #     return datadict
         # raise StopIteration
         
 
@@ -1016,4 +1018,85 @@ class hipochainIterator:
             return res #TODO: Will this return last remainder that is not necessarily stepsize?
         
         # Final stop
+        raise StopIteration
+
+class hipochainIteratorExperimental:
+
+    """
+    Attributes
+    ----------
+    chain : hipopy.hipopy.hipochain
+        Hipochain object overwhich to iterate
+    idx : int
+        Index of current file in hipochain
+    counter : int
+        Event counter for batching data
+    file : hipopy.hipopy.hipoFile
+        Current file in hipochain
+    items : dict
+        Dictionary of bank names to item names to read
+    dict : dict
+        Dictionary into which Hipo bank data is read
+
+    Methods
+    -------
+    getAllBanks
+
+    Description
+    -----------
+    Experimental iterator for hipopy.hipopy.hipochain class
+    """
+
+    def __init__(self,chain):
+        self.chain   = chain
+        self.nnames  = len(self.chain.names) #NOTE: Assumes this will stay constant.
+        self.idx     = -1
+        self.file    = None
+        if self.chain.banks is None: self.chain.banks = self.getAllBankNames()
+        self.has_events = True
+        self.hbHipoFileIterator = hipopybind.HipoFileIterator(self.chain.names,self.chain.banks,self.chain.step,self.chain.tags)
+        self.banknames = self.hbHipoFileIterator.banknames
+        self.items = self.hbHipoFileIterator.items
+        self.types = self.hbHipoFileIterator.types
+
+        print("DEBUGGING: self.banknames = ",self.banknames)#DEBUGGING
+        print("DEBUGGING: self.items = ",self.items)#DEBUGGING
+        print("DEBUGGING: self.types = ",self.types)#DEBUGGING
+        print("DEBUGGING: self.chain.names = ",self.chain.names)#DEBUGGING
+
+    def getAllBankNames(self):
+        """
+        Description
+        -----------
+        Checks if next file in chain exists and then opens and reads requested banks if so.
+        """
+        # Open file
+        self.idx += 1 #NOTE: Do this before everything below since we initiate at -1.
+        if self.idx>=self.nnames: return #NOTE: Sanity check
+        self.file = hipofile(self.chain.names[self.idx],mode=self.chain.mode,tags=self.chain.tags)
+        self.file.open()
+
+        if self.chain.banks is None: self.chain.banks = self.file.getBanks() #NOTE: This assumes all the files in the chain have the same banks.
+
+    def __next__(self):
+        """
+        Description
+        -----------
+        Loops files reading requested banks if they exist 
+        """
+
+        if self.has_events:
+            self.has_events = self.hbHipoFileIterator.__next__()
+            print("DEBUGGING: self.has_events = ",self.has_events)
+            datadict = {}
+            for idx, bankname in enumerate(self.banknames):
+                for idx2, item in enumerate(self.items[idx]):
+                    item_type = self.types[idx][idx2]
+                    if item_type==5: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getDoubles(bankname,item)
+                    elif item_type==4: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getFloats(bankname,item)
+                    elif item_type==3: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getInts(bankname,item)
+                    elif item_type==8: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getLongs(bankname,item)
+                    elif item_type==2: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getShorts(bankname,item)
+                    elif item_type==1: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getBytes(bankname,item)
+            return datadict
         raise StopIteration
