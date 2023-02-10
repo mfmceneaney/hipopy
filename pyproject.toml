@@ -6,7 +6,6 @@ description = "UpROOT-Like I/O Interface for CLAS12 HIPO Files"
 authors = ["Matthew McEneaney <matthew.mceneaney@duke.edu>"]
 repository = "https://github.com/mfmceneaney/hipopy.git"
 readme = "README.md"
-include = ["hipo/libhipo4.so","hipo/libhipo4.dylib"]
 
 [tool.poetry.dependencies]
 python = "^3.7.3"
