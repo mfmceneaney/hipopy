@@ -14,11 +14,11 @@ or ``"a"`` (read, write, and append).
 
 For example:
 
->>> import hipopy.hipopy
->>> f = hipopy.hipopy.open('file.hipo',mode='r')
+>>> import hipopy.hipopy as hp as hp
+>>> f = hp.open('file.hipo',mode='r')
 >>> f.show()
                NEW::bank :     1     1     3
->>> f.read('NEW::bank')
+>>> f.readBank('NEW::bank')
 
 Reading a Single File
 ---------------------
@@ -29,8 +29,8 @@ If you know the column names and types you want
 simply loop through events using the `hipofile` get methods
 to access the data.
 
->>> import hipopy.hipopy
->>> file = hipopy.hipopy.open('file.hipo',mode='r')
+>>> import hipopy.hipopy as hp
+>>> file = hp.open('file.hipo',mode='r')
 >>> file.show()
                NEW::bank :     1     1     3
 >>> file.readBank('NEW::bank')
@@ -50,8 +50,8 @@ Batch columns are named using the bank name + item name joined by an underscore.
 
 For example:
 
->>> import hipopy.hipopy
->>> for batch in hipopy.hipopy.iterate(['*.hipo'],banks=["NEW::bank"],step=10):
+>>> import hipopy.hipopy as hp
+>>> for batch in hp.iterate(['*.hipo'],banks=["NEW::bank"],step=10):
 >>>     print(batch.keys())
 >>>     break
 >>> ['NEW::bank_px','NEW::bank_py','NEW::bank_pz']
@@ -64,7 +64,7 @@ To write a new hipofile use the ``hipopy.hipopy.create`` function.
    This will overwrite the file if it already exists!
 
 >>> import numpy as np
->>> import hipopy.hipopy as hipopy
+>>> import hipopy.hipopy as hp as hipopy
 >>>
 >>> filename = 'new.hipo'
 >>> bank     = "NEW::bank"
