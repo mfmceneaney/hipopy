@@ -18,4 +18,3 @@ Contents
 
    start
    examples
-   api
