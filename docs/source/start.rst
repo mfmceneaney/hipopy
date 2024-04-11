@@ -22,11 +22,12 @@ You will also need to install the project dependencies:
 Installation
 ------------
 
-To install with pip:
+You can install using pip
 
 .. code-block:: sh
+   
    pip install hipopy
-   ...
+
 
 Or you can install from source following the 
 directions on the `GitHub page <https://github.com/mfmceneaney/hipopy.git>`_.
