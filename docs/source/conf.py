@@ -36,7 +36,7 @@ templates_path = ['_templates']
 
 # -- Options for HTML output
 
-html_theme = 'classic'
+html_theme = 'sphinx_rtd_theme'
 html_logo = 'hipopy_logo_small.png'
 html_theme_options = {"logo_only": True, "sticky_navigation": False}
 
