@@ -17,9 +17,8 @@ or ``"a"`` (read, write, and append).  For example,
    >>> import hipopy.hipopy as hp
    >>> f = hp.open('file.hipo',mode='r')
    >>> f.show()
-   NEW::bank :     1     1     3
+               NEW::bank :     1     1     3
    >>> f.readBank('NEW::bank')
-   
 
 Reading a Single File
 ---------------------
@@ -99,7 +98,7 @@ Extending Files
 To append banks to events in an existing file you must specify the type
 
 .. code-block:: python
-   :emphasize-lines: 11
+   :emphasize-lines: 14
 
    import numpy as np
    import hipopy.hipopy as hp
@@ -132,7 +131,7 @@ to each event you can use the ``hipofile.update()`` function.  Make sure to
 not be written.
 
 .. code-block:: python
-   :emphasize-lines: 23
+   :emphasize-lines: 26
    
    import numpy as np
    import hipopy.hipopy as hp
