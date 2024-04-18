@@ -9,11 +9,11 @@ sys.path.insert(0, os.path.abspath('../../'))
 # -- Project information
 
 project = 'Hipopy'
-copyright = '2022, Matthew McEneaney'
+copyright = '2024, Matthew McEneaney'
 author = 'Matthew McEneaney'
 
-release = '1.2'
-version = '1.2.4'
+release = '1.3'
+version = '1.3.0'
 
 # -- General configuration
 
