@@ -402,7 +402,7 @@ class hipofile:
         bank : string, required
             Bank name
         bankdict : dictionary, required
-            Dictionary of bank entry names to data types ("D", "F", "I")
+            Dictionary of bank entry names to data types ("D":double, "F":float, "I":int, "B":byte, "S":short, "L":long)
         group : int, optional
             Group identifier for bank (must be unique)
             Default : None

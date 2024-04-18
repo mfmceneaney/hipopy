@@ -9,11 +9,11 @@ sys.path.insert(0, os.path.abspath('../../'))
 # -- Project information
 
 project = 'Hipopy'
-copyright = '2022, Matthew McEneaney'
+copyright = '2024, Matthew McEneaney'
 author = 'Matthew McEneaney'
 
-release = '1.2'
-version = '1.2.4'
+release = '1.3'
+version = '1.3.0'
 
 # -- General configuration
 
@@ -24,7 +24,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
 ]
-autosummary_generate = True  # Turn on sphinx.ext.autosummary #NOTE: ADDED
+# autosummary_generate = True  # Turn on sphinx.ext.autosummary #NOTE: ADDED
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),

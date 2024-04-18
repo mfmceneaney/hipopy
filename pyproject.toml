@@ -1,18 +1,17 @@
 [tool.poetry]
 name = "hipopy"
-version = "1.2.4"
+version = "1.3.0"
 license = "MIT"
 description = "UpROOT-Like I/O Interface for CLAS12 HIPO Files"
 authors = ["Matthew McEneaney <matthew.mceneaney@duke.edu>"]
 repository = "https://github.com/mfmceneaney/hipopy.git"
 readme = "README.md"
-include = ["hipo/libhipo4.so","hipo/libhipo4.dylib"]
 
 [tool.poetry.dependencies]
 python = "^3.7.3"
 awkward = "^1.3.0"
 numpy = "^1.19.2"
-hipopybind = ">=0.1.1"
+hipopybind = ">=1.0.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
