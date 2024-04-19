@@ -989,8 +989,8 @@ class hipochainIterator:
                     self.dict = None
                     return res
 
-            # Switch the file AFTER you get through event loop above
-            self.switchFile()
+                # Switch the file AFTER you get through all events in file, BUT remain in loop so you don't need a recursive function
+                if not self.file.reader.hasNext(): self.switchFile()
 
         # Final return for remainder
         if self.dict != None and len(self.dict.keys())>0:
