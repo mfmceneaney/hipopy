@@ -128,6 +128,7 @@ class hipofile:
 
     # Methods
     # -------
+    # __len__
     # open
     # flush
     # close
@@ -182,6 +183,14 @@ class hipofile:
         self.buffname   = None
         self.banklist   = {}
         self.tags       = tags
+
+    def __len__(self):
+        """
+        Return
+        ------
+        Length of the file
+        """
+        return self.reader.getEntries()
         
     def open(self):
         """
