@@ -109,13 +109,13 @@ files = [
 
 [[package]]
 name = "hipopybind"
-version = "1.0.1"
+version = "1.1.0"
 description = "A HIPO python library using PyBind11 and CMake"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "hipopybind-1.0.1-cp311-cp311-macosx_13_0_x86_64.whl", hash = "sha256:c8e11bd2ac4f3e36b793238c14ccf6ad2ae0e6f55198262c73d52c76524bca00"},
-    {file = "hipopybind-1.0.1.tar.gz", hash = "sha256:8e09708a8c826ea4134ddee587445eb9d3eb3e589095c48c7b4223e7b662e75d"},
+    {file = "hipopybind-1.1.0-cp311-cp311-macosx_13_0_x86_64.whl", hash = "sha256:808d5fe80d77d506f3761bd7123976d758df433b2c6c4da90ad0bf21fcbbbffb"},
+    {file = "hipopybind-1.1.0.tar.gz", hash = "sha256:aafccdc5a90cf6f57edc3b2732ef091cff70d708983521b93002895a54e9cec0"},
 ]
 
 [package.extras]
@@ -312,4 +312,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7.3"
-content-hash = "18660995d2de7054f8a450c56dd2a3ae79d7d3f5f539d1ce2b5af1217cfecec1"
+content-hash = "7d78f00f43765398e3374dc8a87bd7abfe36d08fcc08dbfc71e537bdcc4fea4c"
