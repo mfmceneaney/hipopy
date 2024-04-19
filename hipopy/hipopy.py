@@ -926,12 +926,6 @@ class hipochainIterator:
         self.file    = None
         self.items   = {}
         self.dict    = None
-        # self.experimental = True
-        # self.tags = [0,1] #NOTE: EXPERIMENTAL
-        # if self.experimental and self.chain.banks is None: self.switchFile()
-        # if self.experimental:
-        #     self.reached_end = False
-        #     self.hbHipoFileIterator = hipopybind.HipoFileIterator(self.chain.names,self.chain.banks,self.chain.step,self.tags) #NOTE: EXPERIMENTAL
 
     def switchFile(self):
         """
@@ -959,28 +953,6 @@ class hipochainIterator:
         -----------
         Loops files reading requested banks if they exist 
         """
-
-        # if self.experimental:
-
-        #     has_events = self.hbHipoFileIterator.__next__()
-        #     banknames = self.hbHipoFileIterator.banknames
-        #     items = self.hbHipoFileIterator.items
-        #     types = self.hbHipoFileIterator.types
-        #     datadict = {}
-        #     for idx, bankname in enumerate(banknames):
-        #         for idx2, item in enumerate(items[idx]):
-        #             item_type = types[idx][idx2]
-        #             if item_type==5: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getDoubles(bankname,item)
-        #             elif item_type==4: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getFloats(bankname,item)
-        #             elif item_type==3: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getInts(bankname,item)
-        #             elif item_type==8: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getLongs(bankname,item)
-        #             elif item_type==2: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getShorts(bankname,item)
-        #             elif item_type==1: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getBytes(bankname,item)
-
-        #     self.experimental = has_events
-        #     return datadict
-        # raise StopIteration
-        
 
         if self.idx == -1: self.switchFile() # Load first file manually
 
