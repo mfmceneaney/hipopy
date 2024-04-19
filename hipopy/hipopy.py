@@ -1058,7 +1058,6 @@ class hipochainIteratorExperimental:
         self.banknames = self.hbHipoFileIterator.banknames
         self.items = self.hbHipoFileIterator.items
         self.types = self.hbHipoFileIterator.types
-        self.batch_counter = 0
 
     def getAllBankNames(self):
         """
@@ -1080,11 +1079,9 @@ class hipochainIteratorExperimental:
         -----------
         Loops files reading requested banks if they exist 
         """
-
+        
         if self.has_events:
-            if self.batch_counter==0:
-                self.has_events = self.hbHipoFileIterator.__next__()
-            self.batch_counter += 1
+            self.has_events = self.hbHipoFileIterator.__next__()
             datadict = {}
             for idx, bankname in enumerate(self.banknames):
                 for idx2, item in enumerate(self.items[idx]):
@@ -1095,6 +1092,5 @@ class hipochainIteratorExperimental:
                     elif item_type==8: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getLongs(bankname,item)
                     elif item_type==2: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getShorts(bankname,item)
                     elif item_type==1: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getBytes(bankname,item)
-            self.has_events = self.hbHipoFileIterator.__next__() #NOTE: IMPORTANT THIS SHOULD BE FILLING THE DICTIONARY SO self.has_events IS SET CORRECTLY FOR THE NEXT CALL.
             return datadict
         raise StopIteration
