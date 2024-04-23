@@ -36,7 +36,7 @@ def open(filename,mode="r",tags=None):
     f.open()
     return f
 
-def iterate(files,banks=None,step=100,tags=None,experimental=False):
+def iterate(files,banks=None,step=100,tags=None,experimental=True):
     """
     Parameters
     ----------
@@ -54,7 +54,7 @@ def iterate(files,banks=None,step=100,tags=None,experimental=False):
         Default : None
     experimental : bool, optional
         Whether to use experimental hipopybind.HipoFileIterator to iterate files
-        Default : False
+        Default : True
 
     Description
     -----------
@@ -860,13 +860,15 @@ class hipochain:
     tags : int or list of ints
         Set bank tags for reader to use.  0 works for most banks.
         1 is needed for scaler banks.
+    experimental : bool
+        Do bank and event looping in C++ for added speed (see hipopybind package).
 
     Description
     -----------
     Chains files together so they may be read continuously.
     """
 
-    def __init__(self,names,banks=None,step=100,mode="r",tags=None,experimental=False):
+    def __init__(self,names,banks=None,step=100,mode="r",tags=None,experimental=True):
         self.names   = names
 
         # Parse regex NOTE: Must be full or relative path from $PWD.  ~/... does not work.
