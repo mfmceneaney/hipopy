@@ -449,7 +449,6 @@ class hipofile:
                     self.writeBank(bank,list(self.dtypes[bank].keys()),datadict[bank][event],dtypes=list(self.dtypes[bank].values()))
                 self.writer.addEvent(self.event)
                 self.event.reset()
-            self.writer.flush()
 
         # Append mode routine
         elif self.mode == "a":
@@ -461,7 +460,6 @@ class hipofile:
                     self.writeBank(bank,self.dtypes[bank].keys(),datadict[bank][event],dtypes=list(self.dtypes[bank].values()))
                 self.writer.addEvent(self.event)
                 self.event.reset()
-            self.writer.flush()
 
     def update(self,datadict):
         """
@@ -481,7 +479,6 @@ class hipofile:
                 self.writeBank(bank,self.dtypes[bank].keys(),datadict[bank],dtypes=list(self.dtypes[bank].values()))
             self.writer.addEvent(self.event)
             self.event.reset()
-            self.writer.flush()
 
     def write(self):
         """
