@@ -93,9 +93,9 @@ To write a new hipofile use the ``hipopy.hipopy.create`` function.
 
    file.close() # Can also use file.write()
 
-Extending Files
+Modifying Files
 ---------------
-To append banks to events in an existing file you must specify the type
+To add banks to events in an existing file use the ``hipofile.extend()`` function.  Note that you **cannot** modify more events than already exist in the file.
 
 .. code-block:: python
    :emphasize-lines: 14
@@ -125,7 +125,7 @@ To append banks to events in an existing file you must specify the type
    
    file.close() #IMPORTANT! ( Can also use file.write() )
 
-If you instead want to read the events one by one and append additional banks
+If you instead want to read the events **and** append additional banks
 to each event you can use the ``hipofile.update()`` function.  Make sure to 
 **explicitly** add events to which you do not append data, otherwise they will
 not be written.
