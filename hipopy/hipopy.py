@@ -113,9 +113,9 @@ class hipofile:
     event : hipopybind.Event
         HIPO event for reading and writing banks
     group : int
-        Group number for current HIPO bank (unique)
+        Group number for current HIPO bank (not unique)
     item : int
-        Item number for current HIPO bank (not unique)
+        Item number for current HIPO bank (unique)
     dtypes : dict
         Dictionary to datatypes
     buffext : string
@@ -148,7 +148,7 @@ class hipofile:
     # getBanks
     # readAllBanks
     # readBank
-    # getGroup
+    # getItem
     # getEntries
     # getNamesAndTypes
     # getNames
@@ -176,8 +176,8 @@ class hipofile:
         self.dictionary = hipopybind.Dictionary()
         self.event      = hipopybind.Event()
         self.mode       = mode # "r" : read, "w" : write, "a" : append
-        self.group      = 0
-        self.item       = 1
+        self.group      = 1
+        self.item       = 0
         self.dtypes     = {}
         self.buffext    = "~"
         self.buffname   = None
@@ -216,11 +216,11 @@ class hipofile:
             self.reader.open(self.filename)
             self.reader.readDictionary(self.dictionary)
 
-            # Set group number to highest so far
-            self.group = 0
+            # Set item number to highest so far
+            self.item = 0
             for schema in self.dictionary.getSchemaList():
-                g = self.dictionary.getSchema(schema).getGroup()
-                if self.group < g: self.group = g
+                i = self.dictionary.getSchema(schema).getItem()
+                if self.item < i: self.item = i
 
             # Add existing banks to writer dictionary if in append mode
             if self.mode == "a": self.writer.addDictionary(self.dictionary)
@@ -300,7 +300,7 @@ class hipofile:
         self.reader.read(self.event)
         return self.status
 
-    def addSchema(self, name, namesAndTypes, group=-1, item=1):
+    def addSchema(self, name, namesAndTypes, group=1, item=-1):
         """
         Parameters
         ----------
@@ -310,11 +310,11 @@ class hipofile:
             Map of column names to types ("D" : double, "F" : float, 
             "I" : int, "B" : byte, "S" : short, "L" : long)
         group : int, optional
-            Group number for bank (unique)
-            Default : -1
-        item : int, optional
-            Item number for bank (not unique)
+            Group number for bank (not unique)
             Default : 1
+        item : int, optional
+            Item number for bank (unique)
+            Default : -1
 
         Description
         -----------
@@ -325,10 +325,10 @@ class hipofile:
         names = namesAndTypes.keys()
         types = namesAndTypes.values()
         schemaString = ",".join( ["/".join( [key,namesAndTypes[key]] ) for key in namesAndTypes] )
-        if group <= self.group or group < 0:
-            self.group += 1
+        if item <= self.item or item < 0:
+            self.item += 1
 
-        schema = hipopybind.Schema(name,max(self.group,group),item) #NOTE: Important to use this constructor here.
+        schema = hipopybind.Schema(name,group,max(self.item,item)) #NOTE: Important to use this constructor here.
         schema.parse(schemaString)
         d = hipopybind.Dictionary()
         d.addSchema(schema)
@@ -413,10 +413,10 @@ class hipofile:
         bankdict : dictionary, required
             Dictionary of bank entry names to data types ("D":double, "F":float, "I":int, "B":byte, "S":short, "L":long)
         group : int, optional
-            Group identifier for bank (must be unique)
+            Group identifier for bank (does not have to be unique)
             Default : None
         item : int, optional
-            Item identifier for bank (does not have to be unique)
+            Item identifier for bank (must be unique)
             Default : None
 
         Description
@@ -555,19 +555,19 @@ class hipofile:
             bank = hipopybind.Bank(self.dictionary.getSchema(bankName))
             self.event.getStructure(bank)
 
-    def getGroup(self):
+    def getItem(self):
         """
         Description
         -----------
-        Get highest number group of all existing schema in reader for initiating file in append mode.
+        Get highest number item of all existing schema in reader for initiating file in append mode.
         """
-        # Set group number to highest so far
-        group = 0
+        # Set item number to highest so far
+        item = 0
         for schema in self.dictionary.getSchemaList():
-            g = self.dictionary.getSchema(schema).getGroup()
-            if group < g: group = g
-        self.group = group
-        return self.group
+            i = self.dictionary.getSchema(schema).getItem()
+            if item < i: item = i
+        self.item = item
+        return self.item
 
     def getEntries(self,bankName):
         """
