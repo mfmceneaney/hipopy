@@ -12,8 +12,8 @@ project = 'Hipopy'
 copyright = '2024, Matthew McEneaney'
 author = 'Matthew McEneaney'
 
-release = '1.3'
-version = '1.3.6'
+release = '2.0'
+version = '2.0.0'
 
 # -- General configuration
 
@@ -37,7 +37,7 @@ templates_path = ['_templates']
 # -- Options for HTML output
 
 html_theme = 'sphinx_rtd_theme'
-html_logo = 'hipopy_logo_1.3.png'
+html_logo = 'hipopy_logo_2.0.png'
 html_theme_options = {"logo_only": True, "sticky_navigation": False}
 
 # -- Options for EPUB output
