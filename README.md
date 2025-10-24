@@ -1,20 +1,18 @@
 # HIPOPy: UpROOT-like I/O Interface for CLAS12 HIPO Files
+[![PyPI](https://img.shields.io/pypi/v/hipopy.svg)](https://pypi.org/project/hipopy/)
+[![Python](https://github.com/mfmceneaney/hipopy/actions/workflows/python.yml/badge.svg)](https://github.com/mfmceneaney/hipopy/actions/workflows/python.yml)
 
-## Prerequisites
+This package provides an easy python interface for interacting with data stored in CLAS12 [hipo](https://github.com/gavalian/hipo.git) files.
 
-* Python >=3.7.3
-* A compiler with C++11 support
-* Pip 10+ or CMake >= 3.4 (or 3.14+ on Windows, which was the first version to support VS 2019)
-* Ninja or Pip 10+
+## :toolbox: Prerequisites
 
-You will also need to install the project dependencies:
-* [numpy](https://numpy.org)
-* [awkward](https://awkward-array.readthedocs.io/en/latest/)
-* [hipopybind](https://github.com/mfmceneaney/hipopybind.git)
+* python>=3.8
+* compiler with C++17 support
+* pip
 
-(All available with pip.)
+If you are installing from source *without a package manager* you will also need to install the project dependencies listed in [pyproject.toml](pyproject.toml).
 
-## Installation
+## :package: Installation
 
 To install with pip:
 ```bash
@@ -24,6 +22,8 @@ pip install hipopy
 To install from source:
 ```bash
 git clone https://github.com/mfmceneaney/hipopy.git
+cd hipopy
+pip install .
 ```
 
 Then add to following to your startup script:
@@ -31,11 +31,11 @@ Then add to following to your startup script:
 export PYTHONPATH=$PYTHONPATH:/path/to/hipopy
 ```
 
-## Getting Started
+## :rocket: Getting Started
 
 Check out the example scripts in `tutorials`.  More functionality coming soon!
 
-## Documentation
+## :memo: Documentation
 
 Full documentation available on [Read the Docs](https://hipopy.readthedocs.io/en/latest/index.html)!
 
