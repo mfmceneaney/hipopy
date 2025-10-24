@@ -16,6 +16,6 @@ Contents
 
 .. toctree::
 
-   start
+   readme
    examples
    api

@@ -23,6 +23,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
+    "myst_parser"
 ]
 # autosummary_generate = True  # Turn on sphinx.ext.autosummary #NOTE: ADDED
 
@@ -33,6 +34,12 @@ intersphinx_mapping = {
 intersphinx_disabled_domains = ['std']
 
 templates_path = ['_templates']
+
+# myst-parser configuration
+myst_enable_extensions = [
+    "dollarmath",
+    "amsmath",
+]
 
 # -- Options for HTML output
 
