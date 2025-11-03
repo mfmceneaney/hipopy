@@ -9,11 +9,11 @@ sys.path.insert(0, os.path.abspath('../../'))
 # -- Project information
 
 project = 'Hipopy'
-copyright = '2024, Matthew McEneaney'
+copyright = '2025, Matthew McEneaney'
 author = 'Matthew McEneaney'
 
-release = '1.3'
-version = '1.3.6'
+release = '2.0'
+version = '2.0.0'
 
 # -- General configuration
 
@@ -23,6 +23,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
+    "myst_parser"
 ]
 # autosummary_generate = True  # Turn on sphinx.ext.autosummary #NOTE: ADDED
 
@@ -34,10 +35,16 @@ intersphinx_disabled_domains = ['std']
 
 templates_path = ['_templates']
 
+# myst-parser configuration
+myst_enable_extensions = [
+    "dollarmath",
+    "amsmath",
+]
+
 # -- Options for HTML output
 
 html_theme = 'sphinx_rtd_theme'
-html_logo = 'hipopy_logo_1.3.png'
+html_logo = 'hipopy_logo_2.0.png'
 html_theme_options = {"logo_only": True, "sticky_navigation": False}
 
 # -- Options for EPUB output
