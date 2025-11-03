@@ -6,7 +6,7 @@ This package provides an easy python interface for interacting with data stored 
 
 ## :toolbox: Prerequisites
 
-* python>=3.8
+* python>=3.9
 * compiler with C++17 support
 * pip
 
@@ -24,11 +24,6 @@ To install from source:
 git clone https://github.com/mfmceneaney/hipopy.git
 cd hipopy
 pip install .
-```
-
-Then add to following to your startup script:
-```bash
-export PYTHONPATH=$PYTHONPATH:/path/to/hipopy
 ```
 
 ## :rocket: Getting Started
