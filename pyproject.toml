@@ -12,7 +12,7 @@ python = ">=3.9.0"
 numpy = ">=2.0.0"
 hipopybind = ">=2.0.1"
 
-[poetry.group.dev.dependencies]
+[tool.poetry.group.dev.dependencies]
 black = ">=25.9.0"
 pylint = ">=3.3.8"
 pytest = ">=5.2"
