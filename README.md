@@ -10,7 +10,7 @@ This package provides an easy python interface for interacting with data stored 
 * compiler with C++17 support
 * pip
 
-If you are installing from source *without a package manager* you will also need to install the project dependencies listed in [pyproject.toml](pyproject.toml).
+If you are installing from source *without a package manager* you will also need to install the project dependencies listed in [pyproject.toml](https://github.com/mfmceneaney/hipopy/blob/main/pyproject.toml).
 
 ## :package: Installation
 
