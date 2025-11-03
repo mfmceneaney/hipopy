@@ -1,7 +1,7 @@
-#----------------------------------------------------------------------#
+# ----------------------------------------------------------------------#
 # Python interface for reading HIPO files.
 # Authors: M. McEneaney (2022, Duke University)
-#----------------------------------------------------------------------#
+# ----------------------------------------------------------------------#
 
 import os
 import glob
@@ -12,10 +12,11 @@ import numpy.ma as ma
 import awkward as ak
 import hipopybind
 
-#----------------------------------------------------------------------#
+# ----------------------------------------------------------------------#
 # Basic  I/O behaviors
 
-def open(filename,mode="r",tags=None):
+
+def open(filename, mode="r", tags=None):
     """
     Parameters
     ----------
@@ -32,11 +33,12 @@ def open(filename,mode="r",tags=None):
     -----------
     Open a HIPO file to read.
     """
-    f = hipofile(filename,mode=mode,tags=tags)
+    f = hipofile(filename, mode=mode, tags=tags)
     f.open()
     return f
 
-def iterate(files,banks=None,step=100,tags=None,experimental=True):
+
+def iterate(files, banks=None, step=100, tags=None, experimental=True):
     """
     Parameters
     ----------
@@ -61,9 +63,11 @@ def iterate(files,banks=None,step=100,tags=None,experimental=True):
     Iterate through a list of hipofiles reading all banks unless specific banks are specified.
     Iteration is broken into batches of step events.
     """
-    if tags is None and experimental: tags = []
-    f = hipochain(files,banks,step=step,tags=tags,experimental=experimental)
+    if tags is None and experimental:
+        tags = []
+    f = hipochain(files, banks, step=step, tags=tags, experimental=experimental)
     return f
+
 
 def create(filename):
     """
@@ -75,8 +79,9 @@ def create(filename):
     -----------
     Open a HIPO file to write (overwrites existing files).
     """
-    f = hipofile(filename,mode="w")
+    f = hipofile(filename, mode="w")
     return f
+
 
 def recreate(filename):
     """
@@ -88,15 +93,16 @@ def recreate(filename):
     -----------
     Open an existing HIPO file to write more banks.
     """
-    f = hipofile(filename,mode="a")
-    f.open() #NOTE: This just opens the reader.  To open the writer, call f.open() again explicitly after adding schema you want to write.
+    f = hipofile(filename, mode="a")
+    f.open()  # NOTE: This just opens the reader.  To open the writer, call f.open() again explicitly after adding schema you want to write.
     return f
 
-#----------------------------------------------------------------------#
+
+# ----------------------------------------------------------------------#
 # Classes: hipofile, hipofileIterator, hipochain, hipochainIterator
 
-class hipofile:
 
+class hipofile:
     """
     Attributes
     ----------
@@ -160,7 +166,7 @@ class hipofile:
     # getShorts
     # getLongs
 
-    def __init__(self,filename,mode="r",tags=None):
+    def __init__(self, filename, mode="r", tags=None):
         """
         Parameters
         ----------
@@ -170,19 +176,19 @@ class hipofile:
             File mode ("r" : read, "w" : write, "a" : append)
             Default : "r"
         """
-        self.filename   = filename
-        self.reader     = hipopybind.Reader() if mode != "w" else None
-        self.writer     = hipopybind.Writer() if mode != "r" else None
+        self.filename = filename
+        self.reader = hipopybind.Reader() if mode != "w" else None
+        self.writer = hipopybind.Writer() if mode != "r" else None
         self.dictionary = hipopybind.Dictionary()
-        self.event      = hipopybind.Event()
-        self.mode       = mode # "r" : read, "w" : write, "a" : append
-        self.group      = 1
-        self.item       = 0
-        self.dtypes     = {}
-        self.buffext    = "~"
-        self.buffname   = None
-        self.banklist   = {}
-        self.tags       = tags
+        self.event = hipopybind.Event()
+        self.mode = mode  # "r" : read, "w" : write, "a" : append
+        self.group = 1
+        self.item = 0
+        self.dtypes = {}
+        self.buffext = "~"
+        self.buffname = None
+        self.banklist = {}
+        self.tags = tags
 
     def __len__(self):
         """
@@ -191,7 +197,7 @@ class hipofile:
         Length of the file
         """
         return self.reader.getEntries()
-        
+
     def open(self):
         """
         Description
@@ -200,17 +206,20 @@ class hipofile:
         IMPORTANT:  Make sure you add schema before opening a file to write!
         """
 
-        if self.mode=="r":
+        if self.mode == "r":
             if self.tags is not None:
-                if type(self.tags)==int:
-                    self.reader.setTags(self.tags) #NOTE: Only set tags for files to read since not yet tested for writing files.
+                if type(self.tags) == int:
+                    self.reader.setTags(
+                        self.tags
+                    )  # NOTE: Only set tags for files to read since not yet tested for writing files.
                 else:
                     for tag in self.tags:
                         self.reader.setTags(tag)
             self.reader.open(self.filename)
             self.reader.readDictionary(self.dictionary)
-        elif self.mode=="w": self.writer.open(self.filename)
-        elif self.mode=="a" and self.buffname is None:
+        elif self.mode == "w":
+            self.writer.open(self.filename)
+        elif self.mode == "a" and self.buffname is None:
 
             # Open with reader first
             self.reader.open(self.filename)
@@ -220,24 +229,32 @@ class hipofile:
             self.item = 0
             for schema in self.dictionary.getSchemaList():
                 i = self.dictionary.getSchema(schema).getItem()
-                if self.item < i: self.item = i
+                if self.item < i:
+                    self.item = i
 
             # Add existing banks to writer dictionary if in append mode
-            if self.mode == "a": self.writer.addDictionary(self.dictionary)
-            
-            # Set buffername
-            self.buffname = self.filename + self.buffext #NOTE: Separate code here so that you can call addSchema()
+            if self.mode == "a":
+                self.writer.addDictionary(self.dictionary)
 
-        elif self.mode=="a" and self.buffname is not None:
+            # Set buffername
+            self.buffname = (
+                self.filename + self.buffext
+            )  # NOTE: Separate code here so that you can call addSchema()
+
+        elif self.mode == "a" and self.buffname is not None:
             # Now open with writer after adding schema to write
             self.writer.open(self.buffname)
 
         # Create banks now for speed
-        _dictionary = self.dictionary if self.mode=='r' else self.writer.getDictionary()
+        _dictionary = (
+            self.dictionary if self.mode == "r" else self.writer.getDictionary()
+        )
         for schema in _dictionary.getSchemaList():
             self.banklist[schema] = hipopybind.Bank(_dictionary.getSchema(schema))
-            self.event.getStructure(self.banklist[schema]) #NOTE: IMPORTANT! Necessary before reading banks into event with addStructure.
-            
+            self.event.getStructure(
+                self.banklist[schema]
+            )  # NOTE: IMPORTANT! Necessary before reading banks into event with addStructure.
+
     def flush(self):
         """
         Description
@@ -257,15 +274,16 @@ class hipofile:
         -----------
         Close osstream for an open file.
         """
-        if self.mode=="r": pass #NOTE: Nothing to do here.
-        if self.mode=="w":
+        if self.mode == "r":
+            pass  # NOTE: Nothing to do here.
+        if self.mode == "w":
             self.writer.close()
-        if self.mode=="a":
+        if self.mode == "a":
             self.writer.close()
-            shutil.copy(self.buffname,self.filename) #TODO: Check this
-            os.remove(self.buffname) #TODO: Check this
+            shutil.copy(self.buffname, self.filename)  # TODO: Check this
+            os.remove(self.buffname)  # TODO: Check this
 
-    def goToEvent(self,event):
+    def goToEvent(self, event):
         """
         Parameters
         ----------
@@ -282,7 +300,7 @@ class hipofile:
         Move to requested HIPO event in a file in read mode.
         """
         self.status = self.reader.gotoEvent(event)
-        self.reader.read(self.event) #TODO: This currently seg faults...
+        self.reader.read(self.event)  # TODO: This currently seg faults...
         return self.status
 
     def nextEvent(self):
@@ -307,7 +325,7 @@ class hipofile:
         name : string, required
             Bank name
         namesAndTypes : dictionary, required
-            Map of column names to types ("D" : double, "F" : float, 
+            Map of column names to types ("D" : double, "F" : float,
             "I" : int, "B" : byte, "S" : short, "L" : long)
         group : int, optional
             Group number for bank (not unique)
@@ -319,16 +337,20 @@ class hipofile:
         Description
         -----------
         Add a schema structure to HIPO file writer dictionary for
-        a bank you wish to write.  NOTE: Do this BEFORE opening the 
+        a bank you wish to write.  NOTE: Do this BEFORE opening the
         file in write mode.
         """
         names = namesAndTypes.keys()
         types = namesAndTypes.values()
-        schemaString = ",".join( ["/".join( [key,namesAndTypes[key]] ) for key in namesAndTypes] )
+        schemaString = ",".join(
+            ["/".join([key, namesAndTypes[key]]) for key in namesAndTypes]
+        )
         if item <= self.item or item < 0:
             self.item += 1
 
-        schema = hipopybind.Schema(name,group,max(self.item,item)) #NOTE: Important to use this constructor here.
+        schema = hipopybind.Schema(
+            name, group, max(self.item, item)
+        )  # NOTE: Important to use this constructor here.
         schema.parse(schemaString)
         d = hipopybind.Dictionary()
         d.addSchema(schema)
@@ -378,33 +400,33 @@ class hipofile:
         -----------
         Fill an event bank with data and write to buffer.
         """
-        rows   = np.shape(data)[-1]
-        bank   = self.banklist[name]
+        rows = np.shape(data)[-1]
+        bank = self.banklist[name]
         bank.reset()
         bank.setRows(rows)
 
         # Add data to bank
         for idx, entry in enumerate(names):
-            dtype = dtypes if len(dtypes)==1 else dtypes[idx]
-            if dtype=="D":
-                hb.putDoubles(bank,entry,data[idx].astype(float))
-            elif dtype=="I":
-                hb.putInts(bank,entry,data[idx].astype(int))
-            elif dtype=="F":
-                hb.putFloats(bank,entry,data[idx].astype(float))
-            elif dtype=="B":
-                hb.putBytes(bank,entry,data[idx].astype(int))
-            elif dtype=="S":
-                hb.putShorts(bank,entry,data[idx].astype(int))
-            elif dtype=="L":
-                hb.putLongs(bank,entry,data[idx].astype(int))
+            dtype = dtypes if len(dtypes) == 1 else dtypes[idx]
+            if dtype == "D":
+                hb.putDoubles(bank, entry, data[idx].astype(float))
+            elif dtype == "I":
+                hb.putInts(bank, entry, data[idx].astype(int))
+            elif dtype == "F":
+                hb.putFloats(bank, entry, data[idx].astype(float))
+            elif dtype == "B":
+                hb.putBytes(bank, entry, data[idx].astype(int))
+            elif dtype == "S":
+                hb.putShorts(bank, entry, data[idx].astype(int))
+            elif dtype == "L":
+                hb.putLongs(bank, entry, data[idx].astype(int))
             else:
                 raise TypeError
 
         # Add bank to event
         self.event.addStructure(bank)
 
-    def newTree(self,bank,bankdict,group=None,item=None):
+    def newTree(self, bank, bankdict, group=None, item=None):
         """
         Parameters
         ----------
@@ -424,11 +446,11 @@ class hipofile:
         Create a new bank to which to add data.  Mimics uproot newtree function.
         """
         group = self.group if group is None else group
-        item  = self.item if item is None else item
-        self.addSchema(bank,bankdict,group,item)
+        item = self.item if item is None else item
+        self.addSchema(bank, bankdict, group, item)
         self.dtypes[bank] = bankdict
 
-    def extend(self,datadict):
+    def extend(self, datadict):
         """
         Parameters
         ----------
@@ -445,8 +467,17 @@ class hipofile:
         # Write mode routine
         if self.mode == "w":
             for event in range(nEvents):
-                for bank in datadict: # This requires datadict shape to be (nEvents,nNames,nRows)
-                    self.writeBank(bank,list(self.dtypes[bank].keys()),datadict[bank][event],dtypes=list(self.dtypes[bank].values()))
+                for (
+                    bank
+                ) in (
+                    datadict
+                ):  # This requires datadict shape to be (nEvents,nNames,nRows)
+                    self.writeBank(
+                        bank,
+                        list(self.dtypes[bank].keys()),
+                        datadict[bank][event],
+                        dtypes=list(self.dtypes[bank].values()),
+                    )
                 self.writer.addEvent(self.event)
                 self.event.reset()
 
@@ -454,14 +485,25 @@ class hipofile:
         elif self.mode == "a":
             for event in range(nEvents):
                 if not self.nextEvent():
-                    print(" *** ERROR *** Tried to append more events than are in current file. Stopping.") #TODO: Implement logging and figure out how to append more events safely.
+                    print(
+                        " *** ERROR *** Tried to append more events than are in current file. Stopping."
+                    )  # TODO: Implement logging and figure out how to append more events safely.
                     break
-                for bank in datadict: # This requires datadict shape to be (nEvents,nNames,nRows)
-                    self.writeBank(bank,self.dtypes[bank].keys(),datadict[bank][event],dtypes=list(self.dtypes[bank].values()))
+                for (
+                    bank
+                ) in (
+                    datadict
+                ):  # This requires datadict shape to be (nEvents,nNames,nRows)
+                    self.writeBank(
+                        bank,
+                        self.dtypes[bank].keys(),
+                        datadict[bank][event],
+                        dtypes=list(self.dtypes[bank].values()),
+                    )
                 self.writer.addEvent(self.event)
                 self.event.reset()
 
-    def update(self,datadict):
+    def update(self, datadict):
         """
         Parameters
         ----------
@@ -470,13 +512,18 @@ class hipofile:
 
         Description
         -----------
-        Append one set of event banks at a time and do not progress to the 
+        Append one set of event banks at a time and do not progress to the
         next event automatically.
         """
         # Append mode routine
         if self.mode == "a":
-            for bank in datadict: # This requires datadict shape to be (nNames,nRows)
-                self.writeBank(bank,self.dtypes[bank].keys(),datadict[bank],dtypes=list(self.dtypes[bank].values()))
+            for bank in datadict:  # This requires datadict shape to be (nNames,nRows)
+                self.writeBank(
+                    bank,
+                    self.dtypes[bank].keys(),
+                    datadict[bank],
+                    dtypes=list(self.dtypes[bank].values()),
+                )
             self.writer.addEvent(self.event)
             self.event.reset()
 
@@ -488,7 +535,7 @@ class hipofile:
         """
         self.close()
 
-    def hasBank(self,bankName):
+    def hasBank(self, bankName):
         """
         Parameters
         ----------
@@ -507,8 +554,8 @@ class hipofile:
         Print out all available bank names in open file.
         """
         print(self.dictionary)
-    
-    def showBank(self,bankName):
+
+    def showBank(self, bankName):
         """
         Parameters
         ---------
@@ -539,7 +586,7 @@ class hipofile:
             bank = hipopybind.Bank(self.dictionary.getSchema(schema))
             self.event.getStructure(bank)
 
-    def readBank(self,bankName,verbose=False):
+    def readBank(self, bankName, verbose=False):
         """
         Parameters
         ----------
@@ -565,11 +612,12 @@ class hipofile:
         item = 0
         for schema in self.dictionary.getSchemaList():
             i = self.dictionary.getSchema(schema).getItem()
-            if item < i: item = i
+            if item < i:
+                item = i
         self.item = item
         return self.item
 
-    def getEntries(self,bankName):
+    def getEntries(self, bankName):
         """
         Parameters
         ----------
@@ -577,12 +625,12 @@ class hipofile:
 
         Description
         -----------
-        Get number of entries in bank.  Make sure you read bank first 
+        Get number of entries in bank.  Make sure you read bank first
         with readBank(bankName) method above.
         """
         return self.dictionary.getSchema(bankName).getEntries()
 
-    def getNamesAndTypes(self,bankName):
+    def getNamesAndTypes(self, bankName):
         """
         Parameters
         ----------
@@ -601,15 +649,20 @@ class hipofile:
         try:
             bankdict = self.dictionary.getSchema(bankName).getSchemaString()
             bankdict = bankdict.split("}{")[1][:-1]
-            bankdict = { entry.split("/")[0]:entry.split("/")[1] for entry in bankdict.split(",")}
+            bankdict = {
+                entry.split("/")[0]: entry.split("/")[1]
+                for entry in bankdict.split(",")
+            }
         except IndexError:
             print("hipopy.hipopy.hipofile.getNamesAndTypes schemaString unreadable")
-            print("bankName = ",bankName)
-            print("schemaString = ",self.dictionary.getSchema(bankName).getSchemaString())
+            print("bankName = ", bankName)
+            print(
+                "schemaString = ", self.dictionary.getSchema(bankName).getSchemaString()
+            )
             return None
         return bankdict
-    
-    def getNames(self,bankName):
+
+    def getNames(self, bankName):
         """
         Parameters
         ----------
@@ -624,11 +677,11 @@ class hipofile:
         -----------
         Get a list of the entry names from the data table in the current event's bank.
         """
-        schema   = self.dictionary.getSchema(bankName)
+        schema = self.dictionary.getSchema(bankName)
         nEntries = schema.getEntries()
         return [schema.getEntryName(i) for i in range(nEntries)]
 
-    def getTypes(self,bankName):
+    def getTypes(self, bankName):
         """
         Parameters
         ----------
@@ -643,12 +696,12 @@ class hipofile:
         -----------
         Get a list of the entry types from the data table in the current event's bank.
         """
-        dtypes = {1:"B", 2:"S", 3:"I", 4:"F", 5:"D", 8:"L" }
-        schema   = self.dictionary.getSchema(bankName)
+        dtypes = {1: "B", 2: "S", 3: "I", 4: "F", 5: "D", 8: "L"}
+        schema = self.dictionary.getSchema(bankName)
         nEntries = schema.getEntries()
         return [dtypes[schema.getEntryType(i)] for i in range(nEntries)]
 
-    def getRows(self,bankName):
+    def getRows(self, bankName):
         """
         Parameters
         ----------
@@ -656,13 +709,13 @@ class hipofile:
 
         Description
         -----------
-        Get number of rows in bank.  Make sure you read bank first 
+        Get number of rows in bank.  Make sure you read bank first
         with readBank(bankName) method above.
         """
         bank = self.banklist[bankName]
         return bank.getRows()
 
-    def getInts(self,bankName,item):
+    def getInts(self, bankName, item):
         """
         Parameters
         ----------
@@ -683,7 +736,7 @@ class hipofile:
         data = bank.getInts(item)
         return data
 
-    def getFloats(self,bankName,item):
+    def getFloats(self, bankName, item):
         """
         Parameters
         ----------
@@ -704,7 +757,7 @@ class hipofile:
         data = bank.getFloats(item)
         return data
 
-    def getDoubles(self,bankName,item):
+    def getDoubles(self, bankName, item):
         """
         Parameters
         ----------
@@ -725,7 +778,7 @@ class hipofile:
         data = bank.getDoubles(item)
         return data
 
-    def getShorts(self,bankName,item):
+    def getShorts(self, bankName, item):
         """
         Parameters
         ----------
@@ -746,7 +799,7 @@ class hipofile:
         data = bank.getShorts(item)
         return data
 
-    def getLongs(self,bankName,item):
+    def getLongs(self, bankName, item):
         """
         Parameters
         ----------
@@ -767,7 +820,7 @@ class hipofile:
         data = bank.getLongs(item)
         return data
 
-    def getBytes(self,bankName,item):
+    def getBytes(self, bankName, item):
         """
         Parameters
         ----------
@@ -791,56 +844,68 @@ class hipofile:
     def __iter__(self):
         return hipofileIterator(self)
 
-class hipofileIterator:
 
+class hipofileIterator:
     """
     Description
     -----------
     Iterator class for hipopy.hipopy.hipoFile class
     """
 
-    def __init__(self,hipofile):
+    def __init__(self, hipofile):
         self.hipofile = hipofile
         self.idx = 0
 
         if self.hipofile.mode != "w":
-            self.hipofile.readAllBanks()#IMPORTANT!
+            self.hipofile.readAllBanks()  # IMPORTANT!
             self.banks = self.hipofile.getBanks()
-            self.verbose = False #NOTE: Not really necessary.
+            self.verbose = False  # NOTE: Not really necessary.
             self.items = {}
-        
+
             # Read all requested banks
             for b in self.banks:
-                self.hipofile.readBank(b,self.verbose)
-                helper = self.hipofile.getNamesAndTypes(b) #NOTE: #TODO: This breaks down if you repeat with the file open.
+                self.hipofile.readBank(b, self.verbose)
+                helper = self.hipofile.getNamesAndTypes(
+                    b
+                )  # NOTE: #TODO: This breaks down if you repeat with the file open.
                 self.items[b] = helper
 
     def __next__(self):
-        if self.hipofile.nextEvent(): #NOTE: #TODO: #DEBUGGING: Good for reading but need a different method for appending!
+        if (
+            self.hipofile.nextEvent()
+        ):  # NOTE: #TODO: #DEBUGGING: Good for reading but need a different method for appending!
             self.idx += 1
             event = {}
 
             # Get bank data
             for bank in self.banks:
-                self.hipofile.event.getStructure(self.hipofile.banklist[bank])#NOTE: NECESSARY OR YOU WILL NOT READ ANY DATA!
+                self.hipofile.event.getStructure(
+                    self.hipofile.banklist[bank]
+                )  # NOTE: NECESSARY OR YOU WILL NOT READ ANY DATA!
                 for item in self.items[bank]:
                     data = []
                     item_type = self.items[bank][item]
-                    if   item_type=="D": data = self.hipofile.getDoubles(bank,item)
-                    elif item_type=="I": data = self.hipofile.getInts(bank,item)
-                    elif item_type=="F": data = self.hipofile.getFloats(bank,item)
-                    elif item_type=="L": data = self.hipofile.getLongs(bank,item)
-                    elif item_type=="S": data = self.hipofile.getShorts(bank,item)
-                    elif item_type=="B": data = self.hipofile.getBytes(bank,item)
+                    if item_type == "D":
+                        data = self.hipofile.getDoubles(bank, item)
+                    elif item_type == "I":
+                        data = self.hipofile.getInts(bank, item)
+                    elif item_type == "F":
+                        data = self.hipofile.getFloats(bank, item)
+                    elif item_type == "L":
+                        data = self.hipofile.getLongs(bank, item)
+                    elif item_type == "S":
+                        data = self.hipofile.getShorts(bank, item)
+                    elif item_type == "B":
+                        data = self.hipofile.getBytes(bank, item)
 
                     # Add bank data to event dictionary
-                    event[bank+"_"+item] = [data]
+                    event[bank + "_" + item] = [data]
 
             return event
         raise StopIteration
 
-class hipochain:
 
+class hipochain:
     """
     Attributes
     ----------
@@ -865,33 +930,39 @@ class hipochain:
     Chains files together so they may be read continuously.
     """
 
-    def __init__(self,names,banks=None,step=100,mode="r",tags=None,experimental=True):
-        self.names   = names
+    def __init__(
+        self, names, banks=None, step=100, mode="r", tags=None, experimental=True
+    ):
+        self.names = names
 
         # Parse regex NOTE: Must be full or relative path from $PWD.  ~/... does not work.
-        if type(self.names)==str:
+        if type(self.names) == str:
             self.names = glob.glob(names)
         else:
             newnames = []
             for i in range(len(self.names)):
                 files = glob.glob(self.names[i])
-                if len(files)>0:
+                if len(files) > 0:
                     for file in files:
                         newnames.append(file)
             self.names = newnames
 
-        self.banks   = banks
-        self.step    = step
-        self.mode    = "r"   #TODO: Does it make sense to just fix this?
-        self.verbose = False #TODO: Do we really need this?
-        self.tags    = tags
+        self.banks = banks
+        self.step = step
+        self.mode = "r"  # TODO: Does it make sense to just fix this?
+        self.verbose = False  # TODO: Do we really need this?
+        self.tags = tags
         self.experimental = experimental
 
     def __iter__(self):
-        return hipochainIterator(self) if not self.experimental else hipochainIteratorExperimental(self)
+        return (
+            hipochainIterator(self)
+            if not self.experimental
+            else hipochainIteratorExperimental(self)
+        )
+
 
 class hipochainIterator:
-
     """
     Attributes
     ----------
@@ -917,14 +988,14 @@ class hipochainIterator:
     Iterator for hipopy.hipopy.hipochain class
     """
 
-    def __init__(self,chain):
-        self.chain   = chain
-        self.nnames  = len(self.chain.names) #NOTE: Assumes this will stay constant.
-        self.idx     = -1
+    def __init__(self, chain):
+        self.chain = chain
+        self.nnames = len(self.chain.names)  # NOTE: Assumes this will stay constant.
+        self.idx = -1
         self.counter = 0
-        self.file    = None
-        self.items   = {}
-        self.dict    = None
+        self.file = None
+        self.items = {}
+        self.dict = None
 
     def switchFile(self):
         """
@@ -933,16 +1004,22 @@ class hipochainIterator:
         Checks if next file in chain exists and then opens and reads requested banks if so.
         """
         # Open file
-        self.idx += 1 #NOTE: Do this before everything below since we initiate at -1.
-        if self.idx>=self.nnames: return #NOTE: Sanity check
-        self.file = hipofile(self.chain.names[self.idx],mode=self.chain.mode,tags=self.chain.tags)
+        self.idx += 1  # NOTE: Do this before everything below since we initiate at -1.
+        if self.idx >= self.nnames:
+            return  # NOTE: Sanity check
+        self.file = hipofile(
+            self.chain.names[self.idx], mode=self.chain.mode, tags=self.chain.tags
+        )
         self.file.open()
-        
-        if self.chain.banks is None: self.chain.banks = self.file.getBanks() #NOTE: This assumes all the files in the chain have the same banks.
+
+        if self.chain.banks is None:
+            self.chain.banks = (
+                self.file.getBanks()
+            )  # NOTE: This assumes all the files in the chain have the same banks.
 
         # Read all requested banks
         for b in self.chain.banks:
-            self.file.readBank(b,self.chain.verbose)
+            self.file.readBank(b, self.chain.verbose)
             helper = self.file.getNamesAndTypes(b)
             self.items[b] = helper
 
@@ -950,12 +1027,13 @@ class hipochainIterator:
         """
         Description
         -----------
-        Loops files reading requested banks if they exist 
+        Loops files reading requested banks if they exist
         """
 
-        if self.idx == -1: self.switchFile() # Load first file manually
+        if self.idx == -1:
+            self.switchFile()  # Load first file manually
 
-        if self.idx<(self.nnames): #TODO: Check this condition.
+        if self.idx < (self.nnames):  # TODO: Check this condition.
 
             # Check if output array has been initialized
             if self.dict is None:
@@ -966,42 +1044,53 @@ class hipochainIterator:
 
                 # Get bank data
                 for bank in self.chain.banks:
-                    self.file.event.getStructure(self.file.banklist[bank])#NOTE: NECESSARY OR YOU WILL NOT READ ANY DATA!
+                    self.file.event.getStructure(
+                        self.file.banklist[bank]
+                    )  # NOTE: NECESSARY OR YOU WILL NOT READ ANY DATA!
                     for item in self.items[bank]:
                         data = []
                         item_type = self.items[bank][item]
-                        if   item_type=="D": data = self.file.getDoubles(bank,item)
-                        elif item_type=="I": data = self.file.getInts(bank,item)
-                        elif item_type=="F": data = self.file.getFloats(bank,item)
-                        elif item_type=="L": data = self.file.getLongs(bank,item)
-                        elif item_type=="S": data = self.file.getShorts(bank,item)
-                        elif item_type=="B": data = self.file.getBytes(bank,item)
+                        if item_type == "D":
+                            data = self.file.getDoubles(bank, item)
+                        elif item_type == "I":
+                            data = self.file.getInts(bank, item)
+                        elif item_type == "F":
+                            data = self.file.getFloats(bank, item)
+                        elif item_type == "L":
+                            data = self.file.getLongs(bank, item)
+                        elif item_type == "S":
+                            data = self.file.getShorts(bank, item)
+                        elif item_type == "B":
+                            data = self.file.getBytes(bank, item)
 
                         # Add bank data to batch dictionary
-                        if not bank+"_"+item in self.dict: self.dict[bank+"_"+item] = [data]
-                        else: self.dict[bank+"_"+item].append(data)
+                        if not bank + "_" + item in self.dict:
+                            self.dict[bank + "_" + item] = [data]
+                        else:
+                            self.dict[bank + "_" + item].append(data)
 
                 # Check size of output array
                 self.counter += 1
                 if self.counter % self.chain.step == 0:
-                    res       = self.dict
+                    res = self.dict
                     self.dict = None
                     return res
 
                 # Switch the file AFTER you get through all events in file, BUT remain in loop so you don't need a recursive function
-                if not self.file.reader.hasNext(): self.switchFile()
+                if not self.file.reader.hasNext():
+                    self.switchFile()
 
         # Final return for remainder
-        if self.dict != None and len(self.dict.keys())>0:
-            res       = self.dict
+        if self.dict != None and len(self.dict.keys()) > 0:
+            res = self.dict
             self.dict = None
-            return res #TODO: Will this return last remainder that is not necessarily stepsize?
-        
+            return res  # TODO: Will this return last remainder that is not necessarily stepsize?
+
         # Final stop
         raise StopIteration
 
-class hipochainIteratorExperimental:
 
+class hipochainIteratorExperimental:
     """
     Attributes
     ----------
@@ -1027,14 +1116,17 @@ class hipochainIteratorExperimental:
     Experimental iterator for hipopy.hipopy.hipochain class
     """
 
-    def __init__(self,chain):
-        self.chain   = chain
-        self.nnames  = len(self.chain.names) #NOTE: Assumes this will stay constant.
-        self.idx     = -1
-        self.file    = None
-        if self.chain.banks is None: self.getAllBankNames()
+    def __init__(self, chain):
+        self.chain = chain
+        self.nnames = len(self.chain.names)  # NOTE: Assumes this will stay constant.
+        self.idx = -1
+        self.file = None
+        if self.chain.banks is None:
+            self.getAllBankNames()
         self.has_events = True
-        self.hbHipoFileIterator = hipopybind.HipoFileIterator(self.chain.names,self.chain.banks,self.chain.step,self.chain.tags)
+        self.hbHipoFileIterator = hipopybind.HipoFileIterator(
+            self.chain.names, self.chain.banks, self.chain.step, self.chain.tags
+        )
         self.banknames = self.hbHipoFileIterator.banknames
         self.items = self.hbHipoFileIterator.items
         self.types = self.hbHipoFileIterator.types
@@ -1046,31 +1138,55 @@ class hipochainIteratorExperimental:
         Checks if next file in chain exists and then opens and reads requested banks if so.
         """
         # Open file
-        self.idx += 1 #NOTE: Do this before everything below since we initiate at -1.
-        if self.idx>=self.nnames: return #NOTE: Sanity check
-        self.file = hipofile(self.chain.names[self.idx],mode=self.chain.mode,tags=self.chain.tags)
+        self.idx += 1  # NOTE: Do this before everything below since we initiate at -1.
+        if self.idx >= self.nnames:
+            return  # NOTE: Sanity check
+        self.file = hipofile(
+            self.chain.names[self.idx], mode=self.chain.mode, tags=self.chain.tags
+        )
         self.file.open()
 
-        if self.chain.banks is None: self.chain.banks = self.file.getBanks() #NOTE: This assumes all the files in the chain have the same banks.
+        if self.chain.banks is None:
+            self.chain.banks = (
+                self.file.getBanks()
+            )  # NOTE: This assumes all the files in the chain have the same banks.
 
     def __next__(self):
         """
         Description
         -----------
-        Loops files reading requested banks if they exist 
+        Loops files reading requested banks if they exist
         """
-        
+
         if self.has_events:
             self.has_events = self.hbHipoFileIterator.__next__()
             datadict = {}
             for idx, bankname in enumerate(self.banknames):
                 for idx2, item in enumerate(self.items[idx]):
                     item_type = self.types[idx][idx2]
-                    if item_type==5: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getDoubles(bankname,item)
-                    elif item_type==4: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getFloats(bankname,item)
-                    elif item_type==3: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getInts(bankname,item)
-                    elif item_type==8: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getLongs(bankname,item)
-                    elif item_type==2: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getShorts(bankname,item)
-                    elif item_type==1: datadict[bankname+"_"+item] = self.hbHipoFileIterator.getBytes(bankname,item)
+                    if item_type == 5:
+                        datadict[bankname + "_" + item] = (
+                            self.hbHipoFileIterator.getDoubles(bankname, item)
+                        )
+                    elif item_type == 4:
+                        datadict[bankname + "_" + item] = (
+                            self.hbHipoFileIterator.getFloats(bankname, item)
+                        )
+                    elif item_type == 3:
+                        datadict[bankname + "_" + item] = (
+                            self.hbHipoFileIterator.getInts(bankname, item)
+                        )
+                    elif item_type == 8:
+                        datadict[bankname + "_" + item] = (
+                            self.hbHipoFileIterator.getLongs(bankname, item)
+                        )
+                    elif item_type == 2:
+                        datadict[bankname + "_" + item] = (
+                            self.hbHipoFileIterator.getShorts(bankname, item)
+                        )
+                    elif item_type == 1:
+                        datadict[bankname + "_" + item] = (
+                            self.hbHipoFileIterator.getBytes(bankname, item)
+                        )
             return datadict
         raise StopIteration
