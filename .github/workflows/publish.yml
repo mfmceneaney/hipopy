@@ -82,7 +82,7 @@ jobs:
           mv dist_flat dist
           ls -lrth dist
           poetry config repositories.testpypi https://test.pypi.org/legacy/
-          echo poetry publish -r testpypi -u __token__ -p ${{ secrets.TESTPYPI_API_TOKEN }}
+          poetry publish -r testpypi -u __token__ -p ${{ secrets.TESTPYPI_API_TOKEN }}
 
   publish:
     name: Publish to PyPI
@@ -115,4 +115,4 @@ jobs:
           rm -rf dist
           mv dist_flat dist
           ls -lrth dist
-          echo poetry publish -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
+          poetry publish -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
