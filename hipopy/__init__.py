@@ -1,3 +1,5 @@
+# pylint: disable=redefined-builtin
+
 """
 Hipopy - Python library for reading CLAS12 HIPO files
 """
