@@ -2,7 +2,7 @@ name: Publish to PyPI (Tag Release)
 
 on:
   push:
-    # branches: ["main"]
+    branches: ["main"]
     tags:
       - 'v*'  # Runs when a tag like v1.2.3 is pushed
 
