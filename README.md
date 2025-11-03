@@ -4,7 +4,7 @@
 
 This package provides an easy python interface for interacting with data stored in CLAS12 [hipo](https://github.com/gavalian/hipo.git) files.
 
-## :toolbox: Prerequisites
+## Prerequisites
 
 * python>=3.9
 * compiler with C++17 support
@@ -12,7 +12,7 @@ This package provides an easy python interface for interacting with data stored 
 
 If you are installing from source *without a package manager* you will also need to install the project dependencies listed in [pyproject.toml](https://github.com/mfmceneaney/hipopy/blob/main/pyproject.toml).
 
-## :package: Installation
+## Installation
 
 To install with pip:
 ```bash
@@ -26,11 +26,11 @@ cd hipopy
 pip install .
 ```
 
-## :rocket: Getting Started
+## Getting Started
 
 Check out the example scripts in `tutorials`.  More functionality coming soon!
 
-## :memo: Documentation
+## Documentation
 
 Full documentation available on [Read the Docs](https://hipopy.readthedocs.io/en/latest/index.html)!
 
