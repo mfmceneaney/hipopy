@@ -530,7 +530,7 @@ class hipofile:
     def showBank(self, bankName):
         """
         Parameters
-        ---------
+        ----------
         bankName : string, required
 
         Description
@@ -563,8 +563,7 @@ class hipofile:
         Parameters
         ----------
         bankName : string, required
-        verbose : boolean, optional
-            Print out loading message for each event if True
+            Name of bank to be read
 
         Description
         -----------
@@ -691,6 +690,7 @@ class hipofile:
         Parameters
         ----------
         bankName : string, required
+            Name of bank to be read
         item : string, required
             Column name to read in bank
 
@@ -712,6 +712,7 @@ class hipofile:
         Parameters
         ----------
         bankName : string, required
+            Name of bank to be read
         item : string, required
             Column name to read in bank
 
@@ -733,6 +734,7 @@ class hipofile:
         Parameters
         ----------
         bankName : string, required
+            Name of bank to be read
         item : string, required
             Column name to read in bank
 
@@ -754,6 +756,7 @@ class hipofile:
         Parameters
         ----------
         bankName : string, required
+            Name of bank to be read
         item : string, required
             Column name to read in bank
 
@@ -775,6 +778,7 @@ class hipofile:
         Parameters
         ----------
         bankName : string, required
+            Name of bank to be read
         item : string, required
             Column name to read in bank
 
@@ -796,6 +800,7 @@ class hipofile:
         Parameters
         ----------
         bankName : string, required
+            Name of bank to be read
         item : string, required
             Column name to read in bank
 
