@@ -704,7 +704,7 @@ class hipofile:
         Get a column of ints from the data table in the current event's bank.
         """
         bank = self.banklist[bankName]
-        data = bank.getInts(item)
+        data = hipopybind.getInts(bank, item)
         return data
 
     def getFloats(self, bankName, item):
@@ -726,7 +726,7 @@ class hipofile:
         Get a column of floats from the data table in the current event's bank.
         """
         bank = self.banklist[bankName]
-        data = bank.getFloats(item)
+        data = hipopybind.getFloats(bank, item)
         return data
 
     def getDoubles(self, bankName, item):
@@ -748,7 +748,7 @@ class hipofile:
         Get a column of doubles from the data table in the current event's bank.
         """
         bank = self.banklist[bankName]
-        data = bank.getDoubles(item)
+        data = hipopybind.getDoubles(bank, item)
         return data
 
     def getShorts(self, bankName, item):
@@ -770,7 +770,7 @@ class hipofile:
         Get a column of shorts from the data table in the current event's bank.
         """
         bank = self.banklist[bankName]
-        data = bank.getShorts(item)
+        data = hipopybind.getShorts(bank, item)
         return data
 
     def getLongs(self, bankName, item):
@@ -792,7 +792,7 @@ class hipofile:
         Get a column of longs from the data table in the current event's bank.
         """
         bank = self.banklist[bankName]
-        data = bank.getLongs(item)
+        data = hipopybind.getLongs(bank, item)
         return data
 
     def getBytes(self, bankName, item):
@@ -814,7 +814,7 @@ class hipofile:
         Get a column of bytes from the data table in the current event's bank.
         """
         bank = self.banklist[bankName]
-        data = bank.getBytes(item)
+        data = hipopybind.getBytes(bank, item)
         return data
 
     def __iter__(self):
@@ -835,7 +835,6 @@ class hipofileIterator:
         if self.hpfile.mode != "w":
             self.hpfile.readAllBanks()  # IMPORTANT!
             self.banks = self.hpfile.getBanks()
-            self.verbose = False  # NOTE: Not really necessary.
             self.items = {}
 
             # Read all requested banks
@@ -893,8 +892,6 @@ class hipochain:
         Batch size for reading banks
     mode : string
         Currently fixed to always be in read mode ("r")
-    verbose : boolean
-        Currently fixed to always be False
     tags : int or list of ints
         Set bank tags for reader to use.  0 works for most banks.
         1 is needed for scaler banks.
@@ -924,7 +921,6 @@ class hipochain:
         self.banks = banks
         self.step = step
         self.mode = "r"
-        self.verbose = False
         self.tags = tags
         self.experimental = experimental
 
